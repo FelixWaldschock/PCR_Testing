@@ -9,9 +9,6 @@ client.switch_database('PCR_Testing')
 
 #Setup Payload
 
-
-
-
 def getPayload(valueDict):
 
     data = {
@@ -20,11 +17,7 @@ def getPayload(valueDict):
         "ticker": "Test Number" 
         },
     "time": datetime.now(),
-    "fields": {
-        'Temperature': valueDict["temperature"],
-        'Virus_intensity': f,
-        'close': 667.93
-        }
+    "fields": valueDict
     }
     return data
 
