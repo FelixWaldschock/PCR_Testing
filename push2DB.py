@@ -12,7 +12,7 @@ client.switch_database('PCR_Testing')
 def getPayload(valueDict):
 
     data = {
-    "measurement": "CT-Values",
+    "measurement": "PCR_2",
     "tags": {
         "ticker": "Test Number" 
         },
@@ -25,4 +25,6 @@ def send2DB(valueDict):
     json_payload = []
     data = getPayload(valueDict)
     json_payload.append(data)
+    #print(json_payload)
+    client.write_points(json_payload)
     return True

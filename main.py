@@ -25,21 +25,29 @@ def thermoCycling():
     return 
 
 def createMeasurementDict():
-    """
-    MeasurementDict = {
-    "MeasurementNumber": #getNumberOfMeasurement,
-    "tempCase": #readTempSen1,
-    "tempProbe": #readTempSen2,
-    "CT-value": #readPhotoDiode,
-    "Fan1Speed": #getPWMSignalFan1,
-    "Fan2Speed": #getPWMSignalFan2
-    }
-    """
+    
+    #MeasurementDict = {
+    #"MeasurementNumber": #getNumberOfMeasurement,
+    #"tempCase": #readTempSen1,
+    #"tempProbe": #readTempSen2,
+    #"CT-value": #readPhotoDiode,
+    #"Fan1Speed": #getPWMSignalFan1,
+    #"Fan2Speed": #getPWMSignalFan2
+    #}
+    
+    #MeasurementDict = {
+    #"MeasurementNumber": 1,
+    #"tempCase": Temperature1.getValue,
+    #"tempProbe": Temperature2.getValue,
+    #"CT-value": Photodiode.getValue
+    #
+    #}
+
     MeasurementDict = {
     "MeasurementNumber": 1,
-    "tempCase": Temperature1.getValue,
-    "tempProbe": Temperature2.getValue,
-    "CT-value": Photodiode.getValue
+    "tempCase": random.random()*100,
+    "tempProbe": random.random()*100,
+    "CT-value": random.random()*100
     
     }
     return MeasurementDict
@@ -50,5 +58,5 @@ start = 1
 
 while(start == 1):
     for sensor in sensors:
-        sensor.readSensorValue(random.random()*100)
+        sensor.readSensorValue()
     p2db.send2DB(createMeasurementDict())
