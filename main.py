@@ -1,5 +1,11 @@
 import push2DB as p2db
+import readSensor as rS
 from datetime import datetime
+
+#Initialise empty arrays for sensor values
+
+
+
 
 def startNewMeasurement():
     #Create new number
@@ -13,8 +19,6 @@ def thermoCycling():
     #start over
 
 def createMeasurementDict():
-    
-    
     MeasurementDict = {
     "MeasurementNumber": #getNumberOfMeasurement,
     "tempCase": #readTempSen1,
@@ -26,8 +30,8 @@ def createMeasurementDict():
     return MeasurementDict
 
 
-
-
-
 p2db.send2DB(MeasurementDict)
+start = 1
+
+while(start == 1):
 
