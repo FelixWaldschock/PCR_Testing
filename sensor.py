@@ -1,24 +1,25 @@
 class Sensor(object):
     global values
     values = []
-    global value
+    
 
     def __init__(self, type, pin):
         self.type = type
         self.pin = pin
 
-
-    def readSensorValue(rvalue):
-        if (len(values)>=60):
+    def readSensorValue(self, rvalue):
+        values.insert(0,rvalue)
+        if (len(values)>=10):
             values.pop()
-        values.append(rvalue)
 
-    def getValueAveraged():
-        r = 0
+    def getValueAveraged(self):
+        r = 0.0
         for i in values:
             r += i
         r = r / len(values)
-        value = r    
+        return float(r)
 
-    def getValue():
-        return value
+    def getValue(self):
+        r = self.getValueAveraged()
+        return r
+    

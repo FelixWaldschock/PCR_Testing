@@ -35,21 +35,14 @@ def createMeasurementDict():
     #"Fan2Speed": #getPWMSignalFan2
     #}
     
-    #MeasurementDict = {
-    #"MeasurementNumber": 1,
-    #"tempCase": Temperature1.getValue,
-    #"tempProbe": Temperature2.getValue,
-    #"CT-value": Photodiode.getValue
-    #
-    #}
-
     MeasurementDict = {
     "MeasurementNumber": 1,
-    "tempCase": random.random()*100,
-    "tempProbe": random.random()*100,
-    "CT-value": random.random()*100
+    "tempCase": Temperature1.getValue(),
+    "tempProbe": Temperature2.getValue(),
+    "CT-value": Photodiode.getValue()
     
     }
+    print(MeasurementDict)
     return MeasurementDict
 
 
@@ -58,5 +51,5 @@ start = 1
 
 while(start == 1):
     for sensor in sensors:
-        sensor.readSensorValue()
+        sensor.readSensorValue(random.random()*100*sensor.pin)
     p2db.send2DB(createMeasurementDict())
