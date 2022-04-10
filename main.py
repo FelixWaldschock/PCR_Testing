@@ -9,6 +9,9 @@ Temperature1 = sensor.Sensor("Temperatur", 12)
 Temperature2 = sensor.Sensor("Temperatur", 13)
 Photodiode = sensor.Sensor("Photodiode", 18)
 
+# create actor objects
+Peltier = peltier.Peltier(12,0)
+
 sensors = [Temperature1,Temperature2,Photodiode]
 
 def startNewMeasurement():
