@@ -1,9 +1,11 @@
 import push2DB as p2db
 import readSensor as rS
 import sensor
-import peltier
+import actuator
 from datetime import datetime
 import random 
+import RPi.GPIO as GPIO
+import time
 
 # create sensor objects
 Temperature1 = sensor.Sensor("Temperatur", 12)
@@ -11,9 +13,12 @@ Temperature2 = sensor.Sensor("Temperatur", 13)
 Photodiode = sensor.Sensor("Photodiode", 18)
 
 # create actor objects
-Peltier = peltier.Peltier(12,0)
+Peltier = actuator.Actuator("Peltierelement", 12)
 
 sensors = [Temperature1,Temperature2,Photodiode]
+actuators = [Peltier]
+
+pwms = []
 
 def startNewMeasurement():
     #Create new number
@@ -43,18 +48,36 @@ def createMeasurementDict():
     "MeasurementNumber": 1,
     "tempCase": Temperature1.getValue(),
     "tempProbe": Temperature2.getValue(),
-    "CT-value": Photodiode.getValue()
+    "CT-value": Photodiode.getValue(),
+    "Peltier DutyCycle": Peltier.getDutyCycle()
     
     }
-    print(MeasurementDict)
+    #print(MeasurementDict)
     return MeasurementDict
 
+def initPWMsignals():
+    GPIO.setmode(GPIO.BOARD)
+    for i in actuators:
+        print(i.pin)
+        GPIO.setup(i.pin, GPIO.OUT)
+        pwm = GPIO.PWM(i.pin, 100)
+        pwm.ChangeDutyCycle(100)
+        i.pushPWM(pwm)
 
 
 start = 1
+initPWMsignals()
+try:
+    while(start == 1):
+        for sensor in sensors:
+            sensor.readSensorValue(random.random()*100*sensor.pin)
+        p2db.send2DB(createMeasurementDict())
+        Peltier.changeDutyCycle(100.0)
 
-while(start == 1):
-    for sensor in sensors:
-        sensor.readSensorValue(random.random()*100*sensor.pin)
-    p2db.send2DB(createMeasurementDict())
-    Peltier.updateDutyCycle(10)
+except KeyboardInterrupt:
+    print("Ctl C pressed - ending program")
+    for i in actuators:
+        i.pwm.stop()
+        print("All PWM signals cleared")
+    GPIO.cleanup()                     # resets GPIO ports used back to input mode
+    print("Cleanup done")

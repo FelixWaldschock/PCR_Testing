@@ -1,4 +1,3 @@
-from select import POLLWRNORM
 import RPi.GPIO as GPIO
 import time
 
