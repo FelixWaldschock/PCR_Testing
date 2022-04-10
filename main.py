@@ -2,7 +2,7 @@ import push2DB as p2db
 import readSensor as rS
 import sensor
 import actuator
-from datetime import datetime
+from datetime import datetime, timedelta
 import random 
 import RPi.GPIO as GPIO
 import time
@@ -64,15 +64,17 @@ def initPWMsignals():
         pwm.ChangeDutyCycle(100)
         i.pushPWM(pwm)
 
-
 start = 1
 initPWMsignals()
 try:
+    timestamp = datetime.now()
     while(start == 1):
         for sensor in sensors:
             sensor.readSensorValue(random.random()*100*sensor.pin)
-        p2db.send2DB(createMeasurementDict())
+        if (timestamp + timedelta(seconds=2) < datetime.now()):
+            p2db.send2DB(createMeasurementDict())
         Peltier.changeDutyCycle(100.0)
+        time.sleep(0.5)
 
 except KeyboardInterrupt:
     print("Ctl C pressed - ending program")
