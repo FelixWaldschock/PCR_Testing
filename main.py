@@ -1,6 +1,7 @@
 import push2DB as p2db
 import readSensor as rS
 import sensor
+import peltier
 from datetime import datetime
 import random 
 
@@ -56,3 +57,4 @@ while(start == 1):
     for sensor in sensors:
         sensor.readSensorValue(random.random()*100*sensor.pin)
     p2db.send2DB(createMeasurementDict())
+    Peltier.updateDutyCycle(10)
