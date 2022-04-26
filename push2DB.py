@@ -12,7 +12,7 @@ client.switch_database('PCR_Testing')
 def getPayload(valueDict):
 
     data = {
-    "measurement": "PCR_4",
+    "measurement": "PCR_1",
     "tags": {
         "ticker": "Test Number" 
         },
