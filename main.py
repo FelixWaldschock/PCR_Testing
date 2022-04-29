@@ -7,6 +7,7 @@ import random
 import RPi.GPIO as GPIO
 import time
 from ads1015 import ADS1015
+import controller
 
 # create sensor objects
 Temperature1 = sensor.Sensor("PT1000", ['in0/in1'],3.3)
@@ -19,7 +20,19 @@ Peltier = actuator.Actuator("Peltierelement", 12)
 sensors = [Temperature1]
 actuators = [Peltier]
 
+TempTol = 1
+
 pwms = []
+
+
+def reachTemp(tT): #tT targetTemperature
+    while (!(abs(Temp.getvalue()-tT)<TempTol)):  
+        if (Temp.getvalue()>tT):
+            controller.cool()
+        elif(Temp.getvalue()<tT):
+            controller.heat()
+    controller.hold()
+return true
 
 def startNewMeasurement():
     #Create new number
@@ -27,12 +40,19 @@ def startNewMeasurement():
     return 
     
 def thermoCycling():
-    #hold on 57°C for 8secs
-    #heat up to 94°C
-    #hold for 8secs
-    #cool down to 57°C
-    #start over
-    return 
+    cycleCounter += 1
+    startTime = datetime.now()
+    cycleTiming = datetime.now()
+    target = 57 
+    
+    if (reachTemp(57)):
+        if (datetime.now() < cycleTiming + timedelta(sec=8)):
+            cycleTiming = datetime.now()
+            if (reachTemp(94)):
+                if (datetime.now() < cycleTiming + timedelta(sec=8)):
+                    reachTemp(57)
+    return true
+
 
 def createMeasurementDict():
     
@@ -65,7 +85,6 @@ def initPWMsignals():
         pwm.ChangeDutyCycle(100)
         i.pushPWM(pwm)
 
-
 def initADC():
     ads1015 = ADS1015()
     chip_type = ads1015.detect_chip_type()
@@ -91,10 +110,14 @@ def readADC(chip, inputPort):
 start = 1
 initPWMsignals()
 ADC = initADC()
+cycleCounter = 0
 
 try:
     timestamp = datetime.now()
     while(start == 1):
+        if (1):
+            while(cycleCounter < 30):
+                thermoCycling()
         for sensor in sensors:
             sensor.readSensorValue(readADC(ADC, sensor.pin))
             sensor.mapValue()

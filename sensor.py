@@ -38,6 +38,7 @@ class Sensor(object):
             dV_dT = 1.7844141 * 0.001
 
             r = self.getValue()/dV_dT
+            r += 10
             print(str(r))
             return r
 
