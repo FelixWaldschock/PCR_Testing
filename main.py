@@ -1,16 +1,12 @@
-from readline import set_completion_display_matches_hook
-import sys
-from tkinter import Button
 import push2DB as p2db
 import readSensor as rS
 import sensor
 import actuator
 from datetime import datetime, timedelta
-import random 
 import RPi.GPIO as GPIO
-import time
 from ads1015 import ADS1015
 import controller
+import threading
 
 # general parameters
 numberOfCycles = 30
@@ -22,6 +18,10 @@ Photodiode = sensor.Sensor("Photodiode", ['in3/ref'],3.3)
 
 # create actor objects
 Peltier = actuator.Actuator("Peltierelement", 12)
+Fan = actuator.Actuator("Fan", 32)
+LED = actuator.Actuator("LED", 33)
+# https://duckduckgo.com/?q=raspberry+pi+pin+layout&t=brave&iax=images&ia=images&iai=https%3A%2F%2Ffossbytes.com%2Fwp-content%2Fuploads%2F2021%2F04%2Fgpio-pins-raspberry-pi-4-e1617866771594.png
+
 
 # buttons
 buttonPin = 13
@@ -46,23 +46,23 @@ def reachTemp(tT): #tT targetTemperature
     return True
 
 def thermoCycling():
+    global cycleCounter
     cycleCounter += 1
-    startTime = datetime.now()
     cycleTiming = datetime.now()
-    target = 57 
-    
     if (reachTemp(57)):
         if (datetime.now() < (cycleTiming + timedelta(sec=8))):
             cycleTiming = datetime.now()
             if (reachTemp(94)):
                 if (datetime.now() < (cycleTiming + timedelta(sec=8))):
-                    reachTemp(57)
-    return True
+                    if(reachTemp(57)):
+                        return True
+    return 
 
 def measureData():
     for sensor in sensors:
         sensor.readSensorValue(readADC(ADC, sensor.pin))
         sensor.mapValue()
+    send2DB()
     return
     
 def createMeasurementDict():
@@ -129,10 +129,12 @@ def initButtons():
 def checkButtons():
     buttonPrev = buttonState
     buttonState = GPIO.input(buttonPin)
-    if (buttonPrev != buttonState):
-        return True    
-    else:
-        return False
+    if (buttonPrev == False):
+        if (buttonPrev != buttonState):
+            return True    
+        else:
+            return False
+    return False
 
 def initThreads():
     # thread for thermocycling
@@ -141,35 +143,7 @@ def initThreads():
     global threads
     tC = threading.Thread(target=thermoCycling)
     meas = threading.Thread(target=measureData)
-    sending = threading.Thread(target=send2DB)
-    threads = [tC, meas, sending]
-    return
-
-def loop():
-    SysStatus = True
-    while(start == 1):
-        if (1):
-            while(cycleCounter < 30):
-                thermoCycling()
-        if (timestamp + timedelta(seconds=2) < datetime.now()):
-            p2db.send2DB(createMeasurementDict())
-        Peltier.changeDutyCycle(100.0)
-        
-        time.sleep(0.5)
-
-def startProcess():
-    SysStatus = True
-    #start all treads
-    for t in threads:
-        t.start()
-    return
-
-def stopProcess():
-    #stop all threads
-    for t in threads:
-        t.join()
-    #stop all pwm signals
-    stopPWMs()
+    threads = [tC, meas]
     return
 
 def stopPWMs():
@@ -178,6 +152,23 @@ def stopPWMs():
         print("All PWM signals cleared")
     return
 
+def startProcess():
+    global SysStatus
+    SysStatus = True
+    #start all treads
+    for t in threads:
+        t.start()
+    return
+
+def stopProcess():
+    #stop all threads
+    global SysStatus
+    SysStatus = False
+    for t in threads:
+        t.join()
+    #stop all pwm signals
+    stopPWMs()
+    return
 
 # Initiation --------------------------
 
@@ -189,14 +180,14 @@ SysStatus = False
 # -----------------
 
 try:
-    while(cycleCounter < numberOfCycles):
+    while(cycleCounter <= numberOfCycles):
         if (checkButtons()):
             if(SysStatus == True):
                 stopProcess()
             else:
                 startProcess()
-
-        
+    if (cycleCounter == numberOfCycles):
+        print(str(cycleCounter)+" Cycles done! Stopping system")
     stopProcess()
     print("Process done")
 
