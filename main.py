@@ -179,6 +179,7 @@ def stopProcess():
     SysStatus = False
     for t in threads:
         t.join()
+
     #stop all pwm signals
     stopPWMs()
     return
