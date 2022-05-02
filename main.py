@@ -62,7 +62,19 @@ def measureData():
     for sensor in sensors:
         sensor.readSensorValue(readADC(ADC, sensor.pin))
         sensor.mapValue()
-    send2DB()
+    return
+
+def measureDataLoop(mfreq,sfreq):
+    mts = timedelta(sec=(1/mfreq))
+    m = int(mfreq/sfreq)
+    i = 0
+    timestamp = datetime.now()
+    while((datetime.now()+mts)<timestamp):
+        i += 1
+        measureData()
+        timestamp = datetime.now()
+        if((i%m) == 0):
+            send2DB()
     return
     
 def createMeasurementDict():
@@ -84,7 +96,6 @@ def createMeasurementDict():
     "Peltier DutyCycle": Peltier.getDutyCycle()
     }
 
-    #print(MeasurementDict)
     return MeasurementDict
 
 def send2DB():
@@ -142,7 +153,7 @@ def initThreads():
     # thread for sending 
     global threads
     tC = threading.Thread(target=thermoCycling)
-    meas = threading.Thread(target=measureData)
+    meas = threading.Thread(target=measureDataLoop(1000))
     threads = [tC, meas]
     return
 
