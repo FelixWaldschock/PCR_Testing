@@ -20,8 +20,16 @@ Photodiode2 = sensor.Sensor("Photodiode2", ['in3/ref'],3.3)
 # create actor objects
 Peltier = actuator.Actuator("Peltierelement", 12)
 Fan = actuator.Actuator("Fan", 32)
-LED = actuator.Actuator("LED", 33)
+Heater = actuator.Actuator("Heater", 33)
+"""
+LED1 = 
+LED2 = 
+Fan2 = 
+LEDstatus1 = 
+LEDstatus2 = 
+Endswitch = 
 # https://duckduckgo.com/?q=raspberry+pi+pin+layout&t=brave&iax=images&ia=images&iai=https%3A%2F%2Ffossbytes.com%2Fwp-content%2Fuploads%2F2021%2F04%2Fgpio-pins-raspberry-pi-4-e1617866771594.png
+"""
 
 
 # buttons
