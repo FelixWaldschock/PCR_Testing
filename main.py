@@ -27,8 +27,8 @@ LED = actuator.Actuator("LED", 33)
 buttonPin = 13
 buttonState = False
 
-sensors = [Temperature1]
-actuators = [Peltier]
+sensors = [Temperature1, Temperature2, Photodiode]
+actuators = [Peltier, Fan, LED]
 threads = []
 
 TempTol = 1
@@ -37,10 +37,10 @@ pwms = []
 
 # FUNCTIONS --------------------------
 def reachTemp(tT): #tT targetTemperature
-    while ((abs(Temp.getvalue()-tT)<TempTol)==False):  
-        if (Temp.getvalue()>tT):
+    while ((abs(Temperature1.getvalue()-tT)<TempTol)==False):  
+        if (Temperature1.getvalue()>tT):
             controller.cool()
-        elif(Temp.getvalue()<tT):
+        elif(Temperature1.getvalue()<tT):
             controller.heat()
     controller.hold()
     return True
