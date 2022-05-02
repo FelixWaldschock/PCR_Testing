@@ -7,6 +7,7 @@ import RPi.GPIO as GPIO
 from ads1015 import ADS1015
 import controller
 import threading
+import time
 
 # general parameters
 numberOfCycles = 30
@@ -212,6 +213,14 @@ def stopProcess():
     stopPWMs()
     toggleGPIO(False)
     return
+
+def blinkingLED():
+    while(True):
+        if (SysStatus == True):
+            while(True):
+                GPIO.output(LEDstatus1Pin, True)
+                time.sleep(1)
+                GPIO.output(LEDstatus1Pin, False)
 
 # Initiation --------------------------
 
