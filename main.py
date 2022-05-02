@@ -15,18 +15,19 @@ numberOfCycles = 30
 Temperature1 = sensor.Sensor("PT1000", ['in0/in1'],3.3)
 Photodiode1 = sensor.Sensor("Photodiode1", ['in2/ref'],3.3)
 Photodiode2 = sensor.Sensor("Photodiode2", ['in3/ref'],3.3)
+sensors = [Temperature1, Photodiode1, Photodiode2]
 
 # create actor objects
 Peltier = actuator.Actuator("Peltierelement", 12)
 FanPeltier = actuator.Actuator("FanPeltier", 32)
 Heater = actuator.Actuator("Heater", 33)
+actuators = [Peltier, FanPeltier, Heater]
 
 #GPIO IN
 # buttons
 buttonPin = 16
 buttonState = False
 EndSwitchPin = 18
-
 GPIOins = [buttonPin, EndSwitchPin]
 
 #GPIO OUT
@@ -35,13 +36,11 @@ LED2Pin = 13
 Fan2Pin = 15
 LEDstatus1Pin = 24
 LEDstatus2Pin = 26
-
 GPIOouts = [LED1Pin, LED2Pin, Fan2Pin, LEDstatus1Pin, LEDstatus2Pin]
 
+# RPi Pin Layout
 # https://duckduckgo.com/?q=raspberry+pi+pin+layout&t=brave&iax=images&ia=images&iai=https%3A%2F%2Ffossbytes.com%2Fwp-content%2Fuploads%2F2021%2F04%2Fgpio-pins-raspberry-pi-4-e1617866771594.png
 
-sensors = [Temperature1, Photodiode1, Photodiode2]
-actuators = [Peltier, FanPeltier, LED]
 threads = []
 
 TempTol = 1
@@ -186,16 +185,24 @@ def stopPWMs():
     return
 
 def startProcess():
+    global threads
     global SysStatus
-    GPIO.output(Fan2Pin, True)
+    toggleGPIO(True)
     SysStatus = True
     #start all treads
     for t in threads:
         t.start()
     return
 
+def toggleGPIO(bool):
+    GPIO.output(Fan2Pin, bool)
+    GPIO.output(LED1Pin, bool)
+    GPIO.output(LED2Pin, bool)
+    return
+
 def stopProcess():
     #stop all threads
+    global threads
     global SysStatus
     SysStatus = False
     for t in threads:
@@ -203,6 +210,7 @@ def stopProcess():
 
     #stop all pwm signals
     stopPWMs()
+    toggleGPIO(False)
     return
 
 # Initiation --------------------------
