@@ -53,6 +53,7 @@ pwms = []
 
 # FUNCTIONS --------------------------
 def reachTemp(tT): #tT targetTemperature
+    global controller
     while ((abs(Temperature1.getValue()-tT)<TempTol)==False):  
         if (Temperature1.getValue()>tT):
             controller.cool()
@@ -188,6 +189,7 @@ def initThreads():
     readGPIOs = threading.Thread(target=readGPIOins)
     blinkLEDs = threading.Thread(target=blinkingLED)
     threads = [tC, meas, readGPIOs, blinkLEDs]
+    print("Initiated threads: " + str(len(threads)))
     return
 
 def stopPWMs():
@@ -206,10 +208,12 @@ def startProcess():
     print(threads)
     for t in threads:
         t.start()
+        print(t)
     print("Process started")
     return
 
 def toggleGPIO(bool):
+    print("GPIOs toggled to:" + str(bool))
     GPIO.output(Fan2Pin, bool)
     GPIO.output(LED1Pin, bool)
     GPIO.output(LED2Pin, bool)
