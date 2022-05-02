@@ -22,18 +22,18 @@ Peltier = actuator.Actuator("Peltierelement", 12)
 Fan = actuator.Actuator("Fan", 32)
 Heater = actuator.Actuator("Heater", 33)
 """
-LED1 = 
-LED2 = 
-Fan2 = 
-LEDstatus1 = 
-LEDstatus2 = 
-Endswitch = 
+LED1pin = 11
+LED2pin = 13
+Fan2pin = 15
+LEDstatus1 = 24
+LEDstatus2 = 26
+Endswitch = 18
 # https://duckduckgo.com/?q=raspberry+pi+pin+layout&t=brave&iax=images&ia=images&iai=https%3A%2F%2Ffossbytes.com%2Fwp-content%2Fuploads%2F2021%2F04%2Fgpio-pins-raspberry-pi-4-e1617866771594.png
 """
 
 
 # buttons
-buttonPin = 13
+buttonPin = 16
 buttonState = False
 
 sensors = [Temperature1, Photodiode1, Photodiode2]
@@ -143,7 +143,7 @@ def readADC(chip, inputPort):
     print("Difference Voltage" + str(v) +" "+str(inputPort[0]))
     return v
 
-def initButtons():
+def initGPIOs():
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(buttonPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
@@ -195,6 +195,7 @@ def stopProcess():
 # Initiation --------------------------
 
 initPWMsignals()
+initGPIOs()
 ADC = initADC()
 cycleCounter = 0
 SysStatus = False
