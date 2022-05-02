@@ -7,7 +7,7 @@ class Sensor(object):
 
     def readSensorValue(self, rvalue):
         self.values.insert(0,rvalue)
-        if (len(self.values)>=5):
+        if (len(self.values)>=20):
             self.values.pop()
    
     def getValueAveraged(self):
@@ -37,14 +37,13 @@ class Sensor(object):
             dR_proGrad = 4.32
             dV_dT = 1.7844141 * 0.001
 
-            r = self.getValue()/dV_dT
+            r = abs(self.getValue())/dV_dT
             r += 10
-            print(str(r))
             return r
 
-        #elif(self.type == "PhotoDiode"):
-        #    r = mappedValue()
-        #    return r
+        elif(self.type == "PhotoDiode"):
+            r = abs(self.getValue())
+            return r
         else:
             print("Type not defined")
         

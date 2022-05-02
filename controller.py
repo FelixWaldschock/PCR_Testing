@@ -1,17 +1,24 @@
-def cool():
-    Peltier.ChangeDutyCycle(100)
-    Fan.ChangeDutyCycle(100)
-    Heater.ChangeDutyCycle(0)
-    return
+class controller(Object):
+    def __init__(self, Ob):
+        self.Peltier = Ob[0]
+        self.Fan = Ob[1]
+        self.Heater = Ob[2]
 
-def heat():
-    Peltier.ChangeDutyCycle(0)
-    Fan.ChangeDutyCycle(0)
-    Heater.ChangeDutyCycle(100)
-    return
+    def cool(self):
+        self.Peltier.ChangeDutyCycle(100)
+        self.Fan.ChangeDutyCycle(100)
+        self.Heater.ChangeDutyCycle(0)
+        return
 
-def hold():
-    Peltier.ChangeDutyCycle(0)
-    Fan.ChangeDutyCycle(0)
-    Heater.ChangeDutyCycle(0)
-    return
+    def heat(self):
+        self.Peltier.ChangeDutyCycle(0)
+        self.Fan.ChangeDutyCycle(0)
+        self.Heater.ChangeDutyCycle(100)
+        return
+
+    def hold(self):
+        self.Peltier.ChangeDutyCycle(0)
+        self.Fan.ChangeDutyCycle(0)
+        self.Heater.ChangeDutyCycle(0)
+        return
+

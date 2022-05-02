@@ -2,12 +2,14 @@ import push2DB as p2db
 import readSensor as rS
 import sensor
 import actuator
+import controller as cntrl
 from datetime import datetime, timedelta
 import RPi.GPIO as GPIO
 from ads1015 import ADS1015
-import controller
 import threading
 import time
+
+
 
 # general parameters
 numberOfCycles = 30
@@ -15,14 +17,15 @@ numberOfCycles = 30
 # create sensor objects
 Temperature1 = sensor.Sensor("PT1000", ['in0/in1'],3.3)
 Photodiode1 = sensor.Sensor("Photodiode1", ['in2/ref'],3.3)
-Photodiode2 = sensor.Sensor("Photodiode2", ['in3/ref'],3.3)
-sensors = [Temperature1, Photodiode1, Photodiode2]
+#Photodiode2 = sensor.Sensor("Photodiode2", ['in3/ref'],3.3)
+sensors = [Temperature1, Photodiode1]
 
 # create actor objects
 Peltier = actuator.Actuator("Peltierelement", 12)
 FanPeltier = actuator.Actuator("FanPeltier", 32)
 Heater = actuator.Actuator("Heater", 33)
 actuators = [Peltier, FanPeltier, Heater]
+controller = cntrl.controller(actuators)
 
 #GPIO IN
 # buttons
@@ -50,10 +53,10 @@ pwms = []
 
 # FUNCTIONS --------------------------
 def reachTemp(tT): #tT targetTemperature
-    while ((abs(Temperature1.getvalue()-tT)<TempTol)==False):  
-        if (Temperature1.getvalue()>tT):
+    while ((abs(Temperature1.getValue()-tT)<TempTol)==False):  
+        if (Temperature1.getValue()>tT):
             controller.cool()
-        elif(Temperature1.getvalue()<tT):
+        elif(Temperature1.getValue()<tT):
             controller.heat()
     controller.hold()
     return True
@@ -61,28 +64,32 @@ def reachTemp(tT): #tT targetTemperature
 def thermoCycling():
     global cycleCounter
     cycleCounter += 1
+    print("Thermal cycling startet: index " + str(cycleCounter))
+    
     cycleTiming = datetime.now()
     if (reachTemp(57)):
-        if (datetime.now() < (cycleTiming + timedelta(sec=8))):
+        if (datetime.now() < (cycleTiming + timedelta(seconds=8))):
             cycleTiming = datetime.now()
             if (reachTemp(94)):
-                if (datetime.now() < (cycleTiming + timedelta(sec=8))):
+                if (datetime.now() < (cycleTiming + timedelta(seconds=8))):
                     if(reachTemp(57)):
                         return True
     return 
 
 def measureData():
+    global ADC
     for sensor in sensors:
         sensor.readSensorValue(readADC(ADC, sensor.pin))
         sensor.mapValue()
     return
 
 def measureDataLoop(mfreq,sfreq):
-    mts = timedelta(sec=(1/mfreq))
+    print("MeasureDataLoop")
+    mts = timedelta(seconds=(1/mfreq))
     m = int(mfreq/sfreq)
     i = 0
     timestamp = datetime.now()
-    while((datetime.now()+mts)<timestamp):
+    while((datetime.now()+mts)>timestamp):
         i += 1
         measureData()
         timestamp = datetime.now()
@@ -95,11 +102,11 @@ def createMeasurementDict():
     "Measurement_Number": 1,
     "Temperature_Probe": Temperature1.getValue(),
     "CT-value_Probe1": Photodiode1.getValue(),
-    "CT-value_Probe2": Photodiode2.getValue(),
+    #"CT-value_Probe2": Photodiode2.getValue(),
     "Peltier_DutyCycle": Peltier.getDutyCycle(),
     "Fan_DutyCycle": FanPeltier.getDutyCycle()
     }
-
+    print(MeasurementDict)
     return MeasurementDict
 
 def send2DB():
@@ -129,12 +136,12 @@ def initADC():
         ads1015.set_sample_rate(860)
 
     ADC = ads1015
-    print(ADC.get_reference_voltage())
+    #print(ADC.get_reference_voltage())
     return [ADC,ADC.get_reference_voltage()]
 
 def readADC(chip, inputPort):
     v = chip[0].get_voltage(channel=inputPort[0])
-    print("Difference Voltage" + str(v) +" "+str(inputPort[0]))
+    #print("Difference Voltage" + str(v) +" "+str(inputPort[0]))
     return v
 
 def initGPIOs():
@@ -154,6 +161,9 @@ def initGPIOs():
     GPIO.output(LEDstatus1Pin, True)
 
 def checkButtons():
+    print("CheckButtons")
+    global buttonState
+    global buttonPin
     buttonPrev = buttonState
     buttonState = GPIO.input(buttonPin)
     if (buttonPrev == False):
@@ -164,8 +174,8 @@ def checkButtons():
     return False
 
 def readGPIOins():
-    if (GPIO.Input(EndSwitchPin)==False):
-        stopProcess()
+    #if (GPIO.Input(EndSwitchPin)==False):
+    #    stopProcess()
     return
 
 def initThreads():
@@ -174,9 +184,10 @@ def initThreads():
     # thread for sending 
     global threads
     tC = threading.Thread(target=thermoCycling)
-    meas = threading.Thread(target=measureDataLoop(1000))
+    meas = threading.Thread(target=measureDataLoop(1000,10))
     readGPIOs = threading.Thread(target=readGPIOins)
-    threads = [tC, meas]
+    blinkLEDs = threading.Thread(target=blinkingLED)
+    threads = [tC, meas, readGPIOs, blinkLEDs]
     return
 
 def stopPWMs():
@@ -186,13 +197,16 @@ def stopPWMs():
     return
 
 def startProcess():
+    print("Starting Process")
     global threads
     global SysStatus
     toggleGPIO(True)
     SysStatus = True
     #start all treads
+    print(threads)
     for t in threads:
         t.start()
+    print("Process started")
     return
 
 def toggleGPIO(bool):
@@ -224,21 +238,25 @@ def blinkingLED():
 
 # Initiation --------------------------
 
+ADC = initADC()
 initPWMsignals()
 initGPIOs()
-ADC = initADC()
+initThreads()
 cycleCounter = 0
 SysStatus = False
 
 # -----------------
 
 try:
+    print("Try")
     while(cycleCounter <= numberOfCycles):
+        print("Loop started")
         if (checkButtons()):
             if(SysStatus == True):
                 stopProcess()
             else:
                 startProcess()
+                print("Process Stared loop")
     if (cycleCounter == numberOfCycles):
         print(str(cycleCounter)+" Cycles done! Stopping system")
     stopProcess()
