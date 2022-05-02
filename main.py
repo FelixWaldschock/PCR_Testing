@@ -13,8 +13,9 @@ numberOfCycles = 30
 
 # create sensor objects
 Temperature1 = sensor.Sensor("PT1000", ['in0/in1'],3.3)
-Temperature2 = sensor.Sensor("PT1000", ['in2/ref'],3.3)
-Photodiode = sensor.Sensor("Photodiode", ['in3/ref'],3.3)
+Photodiode1 = sensor.Sensor("Photodiode1", ['in2/ref'],3.3)
+Photodiode2 = sensor.Sensor("Photodiode2", ['in3/ref'],3.3)
+
 
 # create actor objects
 Peltier = actuator.Actuator("Peltierelement", 12)
@@ -27,7 +28,7 @@ LED = actuator.Actuator("LED", 33)
 buttonPin = 13
 buttonState = False
 
-sensors = [Temperature1, Temperature2, Photodiode]
+sensors = [Temperature1, Photodiode1, Photodiode2]
 actuators = [Peltier, Fan, LED]
 threads = []
 
@@ -89,11 +90,12 @@ def createMeasurementDict():
     #}
     
     MeasurementDict = {
-    "MeasurementNumber": 1,
-    "tempCase": Temperature1.getValue(),
-    "tempProbe": Temperature2.getValue(),
-    "CT-value": Photodiode.getValue(),
-    "Peltier DutyCycle": Peltier.getDutyCycle()
+    "Measurement_Number": 1,
+    "Temperature_Probe": Temperature1.getValue(),
+    "CT-value_Probe1": Photodiode1.getValue(),
+    "CT-value_Probe2": Photodiode2.getValue(),
+    "Peltier_DutyCycle": Peltier.getDutyCycle(),
+    "Fan_DutyCycle": Fan.getDutyCycle()
     }
 
     return MeasurementDict
