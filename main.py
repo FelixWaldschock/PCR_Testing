@@ -16,28 +16,32 @@ Temperature1 = sensor.Sensor("PT1000", ['in0/in1'],3.3)
 Photodiode1 = sensor.Sensor("Photodiode1", ['in2/ref'],3.3)
 Photodiode2 = sensor.Sensor("Photodiode2", ['in3/ref'],3.3)
 
-
 # create actor objects
 Peltier = actuator.Actuator("Peltierelement", 12)
-Fan = actuator.Actuator("Fan", 32)
+FanPeltier = actuator.Actuator("FanPeltier", 32)
 Heater = actuator.Actuator("Heater", 33)
-"""
-LED1pin = 11
-LED2pin = 13
-Fan2pin = 15
-LEDstatus1 = 24
-LEDstatus2 = 26
-Endswitch = 18
-# https://duckduckgo.com/?q=raspberry+pi+pin+layout&t=brave&iax=images&ia=images&iai=https%3A%2F%2Ffossbytes.com%2Fwp-content%2Fuploads%2F2021%2F04%2Fgpio-pins-raspberry-pi-4-e1617866771594.png
-"""
 
-
+#GPIO IN
 # buttons
 buttonPin = 16
 buttonState = False
+EndSwitchPin = 18
+
+GPIOins = [buttonPin, EndSwitchPin]
+
+#GPIO OUT
+LED1Pin = 11
+LED2Pin = 13
+Fan2Pin = 15
+LEDstatus1Pin = 24
+LEDstatus2Pin = 26
+
+GPIOouts = [LED1Pin, LED2Pin, Fan2Pin, LEDstatus1Pin, LEDstatus2Pin]
+
+# https://duckduckgo.com/?q=raspberry+pi+pin+layout&t=brave&iax=images&ia=images&iai=https%3A%2F%2Ffossbytes.com%2Fwp-content%2Fuploads%2F2021%2F04%2Fgpio-pins-raspberry-pi-4-e1617866771594.png
 
 sensors = [Temperature1, Photodiode1, Photodiode2]
-actuators = [Peltier, Fan, LED]
+actuators = [Peltier, FanPeltier, LED]
 threads = []
 
 TempTol = 1
@@ -87,23 +91,13 @@ def measureDataLoop(mfreq,sfreq):
     return
     
 def createMeasurementDict():
-    
-    #MeasurementDict = {
-    #"MeasurementNumber": #getNumberOfMeasurement,
-    #"tempCase": #readTempSen1,
-    #"tempProbe": #readTempSen2,
-    #"CT-value": #readPhotoDiode,
-    #"Fan1Speed": #getPWMSignalFan1,
-    #"Fan2Speed": #getPWMSignalFan2
-    #}
-    
     MeasurementDict = {
     "Measurement_Number": 1,
     "Temperature_Probe": Temperature1.getValue(),
     "CT-value_Probe1": Photodiode1.getValue(),
     "CT-value_Probe2": Photodiode2.getValue(),
     "Peltier_DutyCycle": Peltier.getDutyCycle(),
-    "Fan_DutyCycle": Fan.getDutyCycle()
+    "Fan_DutyCycle": FanPeltier.getDutyCycle()
     }
 
     return MeasurementDict
@@ -145,7 +139,19 @@ def readADC(chip, inputPort):
 
 def initGPIOs():
     GPIO.setmode(GPIO.BOARD)
+    #IN-------------
+    
+    # Toggle switch
     GPIO.setup(buttonPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    # end switch
+    GPIO.setup(EndSwitchPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+    #OUT------------
+    for o in GPIOouts:
+        GPIO.setup(o, GPIO.OUT)
+        GPIO.output(o, False)
+    
+    GPIO.output(LEDstatus1Pin, True)
 
 def checkButtons():
     buttonPrev = buttonState
@@ -157,6 +163,11 @@ def checkButtons():
             return False
     return False
 
+def readGPIOins():
+    if (GPIO.Input(EndSwitchPin)==False):
+        stopProcess()
+    return
+
 def initThreads():
     # thread for thermocycling
     # thread for measuring
@@ -164,6 +175,7 @@ def initThreads():
     global threads
     tC = threading.Thread(target=thermoCycling)
     meas = threading.Thread(target=measureDataLoop(1000))
+    readGPIOs = threading.Thread(target=readGPIOins)
     threads = [tC, meas]
     return
 
@@ -175,6 +187,7 @@ def stopPWMs():
 
 def startProcess():
     global SysStatus
+    GPIO.output(Fan2Pin, True)
     SysStatus = True
     #start all treads
     for t in threads:
