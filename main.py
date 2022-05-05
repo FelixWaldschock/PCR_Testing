@@ -9,8 +9,6 @@ from ads1015 import ADS1015
 import threading
 import time
 
-
-
 # general parameters
 numberOfCycles = 30
 
@@ -142,7 +140,6 @@ def initADC():
 
 def readADC(chip, inputPort):
     v = chip[0].get_voltage(channel=inputPort[0])
-    #print("Difference Voltage" + str(v) +" "+str(inputPort[0]))
     return v
 
 def initGPIOs():

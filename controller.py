@@ -16,9 +16,15 @@ class controller(Object):
         self.Heater.ChangeDutyCycle(100)
         return
 
-    def hold(self):
+    def stop(self):
         self.Peltier.ChangeDutyCycle(0)
         self.Fan.ChangeDutyCycle(0)
         self.Heater.ChangeDutyCycle(0)
+        return
+
+    def hold(self):
+        self.Peltier.ChangeDutyCycle(0)
+        self.Fan.ChangeDutyCycle(0)
+        self.Heater.ChangeDutyCycle(3)
         return
 
