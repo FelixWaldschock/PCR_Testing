@@ -1,3 +1,4 @@
+from tabnanny import check
 import RPi.GPIO as GPIO
 import time
 
@@ -30,6 +31,22 @@ def readGPIOins():
     print("EndSwitch = :" + str(GPIO.Input(EndSwitchPin)))
     return
 
+def checkButtons():
+    print("CheckButtons")
+    global buttonState
+    global buttonPin
+    buttonPrev = buttonState
+    buttonState = GPIO.input(buttonPin)
+    if (buttonPrev == False):
+        if (buttonPrev != buttonState):
+            print(True)
+            return True    
+        else:
+            print(False)
+            return False
+    return False
+
 while(True):
-    readGPIOins()
-    time.sleep(1)
+    checkButtons()
+    #readGPIOins()
+    #time.sleep(1)

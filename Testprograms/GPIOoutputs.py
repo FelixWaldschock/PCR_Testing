@@ -32,8 +32,7 @@ def setGPIO(bool):
         print("GPIO " + str(g) + " set:" + str(bool))
     return
 
-
-setGPIO(True)
+setGPIO(False)
 
 try:
     while(True):
