@@ -10,7 +10,7 @@ class Actuator(object):
         self.pwm.start(0)
         return
 
-    def changeDutyCycle(self, dc):
+    def cDC(self, dc):
         self.pwm.ChangeDutyCycle(dc)
         self.dutyCycle = dc
         return

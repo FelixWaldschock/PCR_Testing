@@ -1,12 +1,12 @@
-from stat import IO_REPARSE_TAG_MOUNT_POINT
 import RPi.GPIO as GPIO
 import sys
 import os
+import time
 
-from main import initPWMsignals, stopPWMs
+
 
 #import from parent dir
-current = os.path.dirname(os.path.realpath(__file__)
+current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
@@ -14,13 +14,11 @@ import controller as cntrl
 import actuator
 
 
-Peltier = actuator.Actuator("Peltierelement", 12)
+Peltier = actuator.Actuator("Peltierelement", 33)
 FanPeltier = actuator.Actuator("FanPeltier", 32)
-Heater = actuator.Actuator("Heater", 33)
+Heater = actuator.Actuator("Heater", 12)
 actuators = [Peltier, FanPeltier, Heater]
 controller = cntrl.controller(actuators)
-
-
 
 def initPWMsignals():
     GPIO.setmode(GPIO.BOARD)
@@ -28,7 +26,7 @@ def initPWMsignals():
         print(i.pin)
         GPIO.setup(i.pin, GPIO.OUT)
         pwm = GPIO.PWM(i.pin, 100)
-        pwm.ChangeDutyCycle(100)
+        pwm.ChangeDutyCycle(0)
         i.pushPWM(pwm)
 
 def stopPWMs():
@@ -39,17 +37,16 @@ def stopPWMs():
 
 def startPWMs():
     for i in actuators:
-        i.pwm.changeDutyCycle(100)
+        i.cDC(100)
         print("All PWMs set to 100")
     return
 
 initPWMsignals()
+
 try:
-    while(True)
-        startPWMs()
-        time.sleep(5)
-        stopPWMs()
-        time.sleep(10)
+    while(True):
+        controller.heat()
+        
 
 except KeyboardInterrupt:
     print("Ctl C pressed - ending program")

@@ -1,52 +1,60 @@
-from tabnanny import check
 import RPi.GPIO as GPIO
 import time
+from datetime import datetime, timedelta
 
 
 #GPIO IN
 # buttons
 buttonPin = 16
 buttonState = False
+buttonPrev = False
 EndSwitchPin = 18
 GPIOins = [buttonPin, EndSwitchPin]
+GPIO.setmode(GPIO.BOARD)
 
 def initGPIOs():
     GPIO.setmode(GPIO.BOARD)
     #IN-------------
     
     # Toggle switch
-    GPIO.setup(buttonPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(buttonPin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     # end switch
-    GPIO.setup(EndSwitchPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(EndSwitchPin, GPIO.IN)
 
-    #OUT------------
-    for o in GPIOouts:
-        GPIO.setup(o, GPIO.OUT)
-        GPIO.output(o, False)
     
-    GPIO.output(LEDstatus1Pin, True)
 
 def readGPIOins():
-    print("Button = :" + str(GPIO.Input(buttonPin)))
-    print("EndSwitch = :" + str(GPIO.Input(EndSwitchPin)))
+    print("Button = :" + str(GPIO.input(buttonPin)))
+    print("EndSwitch = :" + str(GPIO.input(EndSwitchPin)))
     return
 
 def checkButtons():
-    print("CheckButtons")
     global buttonState
     global buttonPin
-    buttonPrev = buttonState
+    global buttonPrev
     buttonState = GPIO.input(buttonPin)
-    if (buttonPrev == False):
-        if (buttonPrev != buttonState):
+    presstime = timedelta(seconds=0.1)
+    ts = datetime.now()
+    if (buttonPrev != buttonState):
+        if(datetime.now() + presstime > ts):
             print(True)
+            buttonPrev = True
             return True    
-        else:
+    else:
+        if(datetime.now() + presstime > ts):
             print(False)
+            buttonPrev = False
             return False
     return False
 
+    
+
+    
+initGPIOs()
+
 while(True):
-    checkButtons()
-    #readGPIOins()
-    #time.sleep(1)
+    #checkButtons()
+    readGPIOins()
+    #print(GPIO.input(buttonPin))
+    time.sleep(1)
+    

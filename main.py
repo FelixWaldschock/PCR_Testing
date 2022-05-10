@@ -14,14 +14,14 @@ numberOfCycles = 30
 
 # create sensor objects
 Temperature1 = sensor.Sensor("PT1000", ['in0/in1'],3.3)
-Photodiode1 = sensor.Sensor("Photodiode1", ['in2/ref'],3.3)
-#Photodiode2 = sensor.Sensor("Photodiode2", ['in3/ref'],3.3)
+Photodiode1 = sensor.Sensor("Photodiode", ['in2/gnd'],3.3)
+Photodiode2 = sensor.Sensor("Photodiode", ['in3/gnd'],3.3)
 sensors = [Temperature1, Photodiode1]
 
 # create actor objects
-Peltier = actuator.Actuator("Peltierelement", 12)
+Peltier = actuator.Actuator("Peltierelement", 33)
 FanPeltier = actuator.Actuator("FanPeltier", 32)
-Heater = actuator.Actuator("Heater", 33)
+Heater = actuator.Actuator("Heater", 12)
 actuators = [Peltier, FanPeltier, Heater]
 controller = cntrl.controller(actuators)
 
@@ -99,9 +99,9 @@ def measureDataLoop(mfreq,sfreq):
 def createMeasurementDict():
     MeasurementDict = {
     "Measurement_Number": 1,
-    "Temperature_Probe": Temperature1.getValue(),
-    "CT-value_Probe1": Photodiode1.getValue(),
-    #"CT-value_Probe2": Photodiode2.getValue(),
+    "Temperature_Probe": Temperature1.mapValue(),
+    "CT-value_Probe1": Photodiode1.mapValue(),
+    #"CT-value_Probe2": Photodiode2.mapValue(),
     "Peltier_DutyCycle": Peltier.getDutyCycle(),
     "Fan_DutyCycle": FanPeltier.getDutyCycle()
     }
@@ -135,7 +135,6 @@ def initADC():
         ads1015.set_sample_rate(860)
 
     ADC = ads1015
-    #print(ADC.get_reference_voltage())
     return [ADC,ADC.get_reference_voltage()]
 
 def readADC(chip, inputPort):
@@ -143,7 +142,9 @@ def readADC(chip, inputPort):
     return v
 
 def initGPIOs():
+    GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BOARD)
+
     #IN-------------
     
     # Toggle switch
@@ -245,6 +246,7 @@ initGPIOs()
 initThreads()
 cycleCounter = 0
 SysStatus = False
+print("Initiation done")
 
 # -----------------
 

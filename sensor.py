@@ -37,11 +37,11 @@ class Sensor(object):
             dR_proGrad = 4.32
             dV_dT = 1.7844141 * 0.001
 
-            r = abs(self.getValue())/dV_dT
+            r = round(abs(self.getValue())/dV_dT,2)
             r += 10
             return r
 
-        elif(self.type == "PhotoDiode"):
+        elif(self.type == "Photodiode"):
             r = abs(self.getValue())
             return r
         else:

@@ -1,57 +1,66 @@
 import RPi.GPIO as GPIO
 from datetime import datetime, timedelta
 import time
+import os
+import sys
+
+
+#import from parent dir
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+import send2csv
+
 
 LED1Pin = 11
 LED2Pin = 13
 Fan2Pin = 15
 LEDstatus1Pin = 24
 LEDstatus2Pin = 26
-GPIOouts = [LED1Pin, LED2Pin, Fan2Pin, LEDstatus1Pin, LEDstatus2Pin]
+GPIOouts = [LED1Pin,LED2Pin, Fan2Pin, LEDstatus1Pin, LEDstatus2Pin]
+
 
 def blinkingLED(Pin, Timestamp, freq):
-    ts = 1000/freq
-    s = False
-    while(not s):
-        if ((datetime.now()+timedelta(milliseconds=ts))>Timestamp):
-            GPIO.Output(Pin, not GPIO.input(Pin))
-            Timestamp = datetime.now()
-            s = not s
-        return
+    ts = 1 / freq
+    GPIO.output(Pin, not GPIO.input(Pin))
+    return 
+    # intervall muss noch eingefügt werden
+
+def initGPIOs():
+    GPIO.setmode(GPIO.BOARD)
+    #OUT------------
+    for o in GPIOouts:
+        GPIO.setup(o, GPIO.OUT)
+        GPIO.output(o, False)
+    
+    GPIO.output(LEDstatus1Pin, True)
 
 def toggleGPIO():
     global GPIOouts
     for g in GPIOouts:
-        GPIO.Output(g, not GPIO.Input(g))
+        GPIO.output(g, not GPIO.input(g))
     return
 
 def setGPIO(bool):
     global GPIOouts
     for g in GPIOouts:
-        GPIO.Output(g, bool)
+        GPIO.output(g, bool)
         print("GPIO " + str(g) + " set:" + str(bool))
     return
 
+initGPIOs()
 setGPIO(False)
 
 try:
-    while(True):
-        setGPIO(True)
-        time.sleep(1)
-        setGPIO(False)
-        time.sleep(3)
-        print("Test toggle")
-        for i in range(10):
-            toggleGPIO()
-            time.sleep(1)
-        print("Test blinking")
-        ts = datetime.now()
-        for i in range(10):
-            ts = blinkingLED(LEDstatus1Pin, ts, 10)
+    ts = datetime.now()
+    setGPIO(True)
+    time.sleep(5)
+       
 
 
 except KeyboardInterrupt:
     print("Ctl C pressed - ending program")
-    stopPWMs()
+    setGPIO(False)
     GPIO.cleanup()                     # resets GPIO ports used back to input mode
     print("Cleanup done")
