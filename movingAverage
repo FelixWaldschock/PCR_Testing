@@ -1,0 +1,44 @@
+class movingAverage:
+    def __init__(self, n):
+        self.n = n
+        self.values = []
+        self.times = []
+    
+    def addValue(self, value, t):
+        if (len(self.values) < self.n):
+            self.values.append(float(value))
+            self.times.append(float(t))
+        else:
+            self.values.pop([0])
+            self.values.append(float(value))
+            self.times.append(float(t))
+    
+    def getCenteredAverage(self):
+        if (len(self.values) == self.n):
+            tempvalue = sum(self.values) / self.n
+            temptime = sum(self.times) / self.n
+            return tempvalue, temptime
+        else:
+            return -1, -1
+
+    def getEndAverage(self):
+        if (len(self.values) == self.n):
+            tempvalue = sum(self.values) / self.n
+            temptime = self.times[-1]
+            return tempvalue, temptime
+        else:
+            return -1, -1
+
+"""
+test = movingAverage(3)
+test.addValue(4,1)
+test.addValue(5,2)
+
+print(test.getCenteredAverage()) 
+print(test.getEndAverage())
+
+test.addValue(6,3)
+
+print(test.getCenteredAverage())
+print(test.getEndAverage())
+"""
