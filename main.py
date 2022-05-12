@@ -13,10 +13,10 @@ import time
 numberOfCycles = 30
 
 # create sensor objects
-Temperature1 = sensor.Sensor("PT1000", ['in0/in1'],3.3)
-Photodiode1 = sensor.Sensor("Photodiode", ['in2/gnd'],3.3)
-Photodiode2 = sensor.Sensor("Photodiode", ['in3/gnd'],3.3)
-sensors = [Temperature1, Photodiode1]
+Temperature1 = sensor.Sensor("PT1000", ['in0/in1'],3.3, 20)
+Photodiode1 = sensor.Sensor("Photodiode", ['in2/gnd'],3.3, 20)
+Photodiode2 = sensor.Sensor("Photodiode", ['in3/gnd'],3.3, 20)
+sensors = [Temperature1, Photodiode1, Photodiode2]
 
 # create actor objects
 Peltier = actuator.Actuator("Peltierelement", 33)
@@ -237,6 +237,42 @@ def blinkingLED():
                 GPIO.output(LEDstatus1Pin, True)
                 time.sleep(1)
                 GPIO.output(LEDstatus1Pin, False)
+
+
+def PhotodiodeDiffMeasure(DiodeNr):
+    global ADC
+    if ((DiodeNr == 1) or (DiodeNr ==2)):
+
+        #40 Measurements
+        sensors[DiodeNr].changeAverageOf(40)
+        
+        #Wahrscheinlich sehr inakkurat!!!
+
+        GPIO.output(GPIOouts[DiodeNr - 1], True)
+        time.sleep(0.02) #Wait for one 50Hz net period
+        #Measure 40 times
+        for i in range(40):
+            sensors[DiodeNr].readSensorValue(readADC(ADC, sensors[DiodeNr].pin))
+            time.sleep(0.001)
+        value = sensors[DiodeNr].getValue()
+        time.sleep(0.02) #Wait for one 50Hz net period
+
+        GPIO.output(GPIOouts[DiodeNr - 1], False)
+
+        time.sleep(0.02) #Wait for one 50Hz net period
+        #Measure 40 times over two periods
+        for i in range(40):
+            sensors[DiodeNr].readSensorValue(readADC(ADC, sensors[DiodeNr].pin))
+            time.sleep(0.001)
+        nolight = sensors[DiodeNr].getValue()
+        time.sleep(0.02) #Wait for one 50Hz net period
+
+        diff = value - nolight
+
+        #Change back to 20
+        sensors[DiodeNr].changeAverageOf(20)
+
+        return diff
 
 # Initiation --------------------------
 

@@ -1,13 +1,19 @@
 class Sensor(object):
-    def __init__(self, type, pin, vcc):
+    def __init__(self, type, pin, vcc, averageOf):
         self.type = type
         self.pin = pin
         self.values = []
         self.vcc = vcc
+        self.averageOf = averageOf
+
+    def changeAverageOf(self, newAverage):
+        self.averageOf = newAverage
+        while (len(self.values)>=self.averageOf):
+            self.values.pop()
 
     def readSensorValue(self, rvalue):
         self.values.insert(0,rvalue)
-        if (len(self.values)>=20):
+        if (len(self.values)>=self.averageOf):
             self.values.pop()
    
     def getValueAveraged(self):
