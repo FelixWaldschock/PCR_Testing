@@ -246,26 +246,27 @@ def PhotodiodeDiffMeasure(DiodeNr):
         #40 Measurements
         sensors[DiodeNr].changeAverageOf(40)
         
-        #Wahrscheinlich sehr inakkurat!!!
+        #Wahrscheinlich immer noch sehr inakkurat!!!
 
+        #Turn on LED
         GPIO.output(GPIOouts[DiodeNr - 1], True)
-        time.sleep(0.02) #Wait for one 50Hz net period
-        #Measure 40 times
-        for i in range(40):
-            sensors[DiodeNr].readSensorValue(readADC(ADC, sensors[DiodeNr].pin))
-            time.sleep(0.001)
-        value = sensors[DiodeNr].getValue()
-        time.sleep(0.02) #Wait for one 50Hz net period
 
+        waitNms(20) #Wait for one 50Hz net period
+
+        #Measure 40 times over two periods
+        value = nMeasuresTimed(40, 1, DiodeNr)
+        
+        waitNms(20) #Wait for one 50Hz net period
+
+        #Turn off LED
         GPIO.output(GPIOouts[DiodeNr - 1], False)
 
-        time.sleep(0.02) #Wait for one 50Hz net period
+        waitNms(20) #Wait for one 50Hz net period
+
         #Measure 40 times over two periods
-        for i in range(40):
-            sensors[DiodeNr].readSensorValue(readADC(ADC, sensors[DiodeNr].pin))
-            time.sleep(0.001)
-        nolight = sensors[DiodeNr].getValue()
-        time.sleep(0.02) #Wait for one 50Hz net period
+        nolight = nMeasuresTimed(40, 1, DiodeNr)
+
+        waitNms(20) #Wait for one 50Hz net period
 
         diff = value - nolight
 
@@ -274,6 +275,36 @@ def PhotodiodeDiffMeasure(DiodeNr):
 
         return diff
 
+# n Measurements with a time distance of deltatms, Sensor average must be set to n
+def nMeasuresTimed(n, deltatms, SensorNr):
+    #Start the timer
+    tstart = time.perf_counter_ns()
+
+    for i in range(n):
+        #Measure
+        sensors[SensorNr].readSensorValue(readADC(ADC, sensors[SensorNr].pin))
+        #Wait in the loop until time is elapsed
+        while (True):
+            tend = time.perf_counter_ns()
+            if (tend-tstart >= deltatms*1e6):
+                break
+            print("tend-tstart", tend-tstart)   #Test print to see how long it takes
+
+        #Restart timer
+        tstart = time.perf_counter_ns()
+        print("break", i)  #Test print to see how long it takes
+    #Get the average
+    value = sensors[SensorNr].getValue()
+    return value
+
+def waitNms(N):
+    tstart = time.perf_counter_ns()
+    while (True):
+        tend = time.perf_counter_ns()
+        if(tend-tstart >= N*1e6)
+        break
+
+        
 # Initiation --------------------------
 
 ADC = initADC()
