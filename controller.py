@@ -11,11 +11,11 @@ class controller(object):
         self.Heater.cDC(0)
         return
 
-    def heat(self):
+    def heat(self):                 #def heat(self, DC):
         print("heating")
         self.Peltier.cDC(0)
         self.Fan.cDC(100)
-        self.Heater.cDC(100)
+        self.Heater.cDC(100)    #self.Heater.cDC(DC)
         return
 
     def stop(self):

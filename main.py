@@ -9,6 +9,11 @@ from ads1015 import ADS1015
 import threading
 import time
 
+#PID
+from simple_pid import PID
+pid.sample_time = 0.01 
+
+
 # general parameters
 numberOfCycles = 30
 
@@ -52,6 +57,13 @@ pwms = []
 # FUNCTIONS --------------------------
 def reachTemp(tT): #tT targetTemperature
     global controller
+
+    ###
+    #pid.setpoint = tT          
+    #pidValue = pid(abs(Temperature1.getValue())) # returns DutyCycle value 0-100
+    #controller.heat(pidValue)                     
+    ###
+
     while ((abs(Temperature1.getValue()-tT)<TempTol)==False):  
         if (Temperature1.getValue()>tT):
             controller.cool()
@@ -59,6 +71,38 @@ def reachTemp(tT): #tT targetTemperature
             controller.heat()
     controller.hold()
     return True
+
+
+
+def upTempPID(tT):
+    global controller
+
+    pid = PID(17.16, 0.9438,0, output_limits=(0, 100)) 
+    pid.setpoint = tT
+    while ((abs(Temperature1.getValue()-tT)<TempTol)==False): 
+        pidValue = pid(Temperature1.getValue()) # returns DutyCycle value 0-100
+        controller.heat(pidValue) 
+
+    return True
+
+
+def downTempPID(tT):
+    global controller
+    pid = PID(17.16, 0.9438,0, output_limits=(0, 100)) # kühler PID noch anpassen
+    pid.setpoint = tT   
+    while ((abs(Temperature1.getValue()-tT)<TempTol)==False):  
+        pidValue = pid(Temperature1.getValue()) # returns DutyCycle value 0-100
+        controller.heat(pidValue) 
+
+    return True
+
+
+def holdTempPID(tT):
+    pid = PID(17.16, 0.9438,0, output_limits=(0, 100))
+    timing = datetime.now()
+    while timing< timedelta(seconds=8)
+        
+
 
 def thermoCycling():
     global cycleCounter
