@@ -58,12 +58,6 @@ pwms = []
 def reachTemp(tT): #tT targetTemperature
     global controller
 
-    ###
-    #pid.setpoint = tT          
-    #pidValue = pid(abs(Temperature1.getValue())) # returns DutyCycle value 0-100
-    #controller.heat(pidValue)                     
-    ###
-
     while ((abs(Temperature1.getValue()-tT)<TempTol)==False):  
         if (Temperature1.getValue()>tT):
             controller.cool()
@@ -76,7 +70,6 @@ def reachTemp(tT): #tT targetTemperature
 
 def upTempPID(tT):
     global controller
-
     pid = PID(17.16, 0.9438,0, output_limits=(0, 100)) 
     pid.setpoint = tT
     while ((abs(Temperature1.getValue()-tT)<TempTol)==False): 
@@ -92,16 +85,17 @@ def downTempPID(tT):
     pid.setpoint = tT   
     while ((abs(Temperature1.getValue()-tT)<TempTol)==False):  
         pidValue = pid(Temperature1.getValue()) # returns DutyCycle value 0-100
-        controller.heat(pidValue) 
-
+        controller.Peltier(pidValue) 
     return True
 
 
 def holdTempPID(tT):
     pid = PID(17.16, 0.9438,0, output_limits=(0, 100))
-    timing = datetime.now()
-    while timing< timedelta(seconds=8)
-        
+    startHold = datetime.now()
+    while (datetime.now() < startHold +timedelta(seconds=8) ) :
+        pidValue = pid(Temperature1.getValue()) # returns DutyCycle value 0-100
+        controller.heat(pidValue)
+    return   
 
 
 def thermoCycling():
