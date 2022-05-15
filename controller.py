@@ -36,6 +36,10 @@ class controller(object):
         self.Fan.cDC(100)
         return
 
+    def fanStop(self):
+        self.Fan.cDC(0)
+        return
+
     def all(self):
         print("all")
         self.Peltier.cDC(100)
