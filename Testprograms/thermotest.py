@@ -1,3 +1,11 @@
+import sys
+import os
+#import from parent dir
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
 import push2DB as p2db
 import readSensor as rS
 import sensor
@@ -50,7 +58,7 @@ GPIOouts = [LED1Pin, LED2Pin, Fan2Pin, LEDstatus1Pin, LEDstatus2Pin]
 
 threads = []
 
-TempTol = 1
+TempTol = 0.01
 
 pwms = []
 
@@ -100,7 +108,7 @@ def holdTempPID(tT, holdtime):
         pidValue = pid(Temperature1.getValue()) # returns DutyCycle value 0-100
         print("holdTempPID temp:", Temperature1.mapValue())
         controller.heat(pidValue)
-    return  
+    return   
 
 def thermoCycling():
     global cycleCounter
@@ -352,33 +360,13 @@ Running = False
 ADC = initADC()
 initPWMsignals()
 initGPIOs()
-initThreads()
+#initThreads()
 cycleCounter = 0
 print("Initiation done")
 
 # -----------------
-
-try:
-    print("Try")
-    while(cycleCounter <= numberOfCycles):
-        #print("Loop started")
-        checkButtons()
-        if(SysStatus == (False and not Running)):
-            startProcess()
-            print("Process Stared loop")
-        
-        elif(SysStatus == True and Running):
-            stopProcess()
-        
+while (True):
     
-    print(str(cycleCounter)+" Cycles done! Stopping system")
-
-    stopProcess()
-    print("Process done")
-
-except KeyboardInterrupt:
-    print("Ctl C pressed - ending program")
-    stopPWMs()
-    toggleGPIO(False)
-    GPIO.cleanup()                     # resets GPIO ports used back to input mode
-    print("Cleanup done")
+    upTempPID(50)
+    holdTempPID(50, 8)
+    downTempPID(30)

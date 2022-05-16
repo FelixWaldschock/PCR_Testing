@@ -4,35 +4,51 @@ class controller(object):
         self.Fan = Ob[1]
         self.Heater = Ob[2]
 
+    """
+    def cool(self):
+        #print("cooling")
+        self.Peltier.cDC(100)
+        self.Fan.cDC(100)
+        self.Heater.cDC(0)
+        return
+
+    def heat(self):
+        #print("heating")
+        self.Peltier.cDC(0)
+        self.Fan.cDC(100)
+        self.Heater.cDC(5)
+        return
+    """
     def cool(self,DC):
-        print("cooling")
+        #print("cooling")
         self.Peltier.cDC(DC)        
         self.Fan.cDC(100)
         self.Heater.cDC(0)
         return
 
     def heat(self,DC):                 
-        print("heating")
+        #print("heating")
         self.Peltier.cDC(0)
         self.Fan.cDC(100)
         self.Heater.cDC(DC)   
         return
 
     def stop(self):
-        print("stop")
+        #print("stop")
         self.Peltier.cDC(0)
         self.Fan.cDC(0)
         self.Heater.cDC(0)
         return
 
     def hold(self):
-        print("holding")
+        #print("holding")
         self.Peltier.cDC(0)
         self.Fan.cDC(100)
         self.Heater.cDC(3)
         return
 
     def fan(self):
+        #print("fan")
         self.Fan.cDC(100)
         return
 
@@ -41,7 +57,7 @@ class controller(object):
         return
 
     def all(self):
-        print("all")
+        #print("all")
         self.Peltier.cDC(100)
         self.Fan.cDC(100)
         self.Heater.cDC(100)

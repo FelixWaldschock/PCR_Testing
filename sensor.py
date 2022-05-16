@@ -44,7 +44,6 @@ class Sensor(object):
             dV_dT = 1.7844141 * 0.001
 
             r = round(abs(self.getValue())/dV_dT,2)
-            r += 10
             return r
 
         elif(self.type == "Photodiode"):
