@@ -17,6 +17,11 @@ pid.sample_time = 0.1
 # general parameters
 numberOfCycles = 30
 
+# system variables
+SysStatus = False
+Running = False
+ProcessDone = False
+
 # create sensor objects
 Temperature1 = sensor.Sensor("PT1000", ['in0/in1'],3.3, 20)
 Photodiode1 = sensor.Sensor("Photodiode", ['in2/gnd'],3.3, 20)
@@ -77,7 +82,6 @@ def upTempPID(tT):
 
     return True
 
-
 def downTempPID(tT):
     global controller
     controller.fan()
@@ -91,7 +95,6 @@ def downTempPID(tT):
     controller.fanStop()
     return True
 
-
 def holdTempPID(tT, holdtime):
     pid = PID(17.16, 0.9438,0, output_limits=(0, 100))
     startHold = datetime.now()
@@ -102,35 +105,13 @@ def holdTempPID(tT, holdtime):
         controller.heat(pidValue)
     return  
 
-def thermoCycling():
-    global cycleCounter
-    cycleCounter += 1
-    print("Thermal cycling startet: index " + str(cycleCounter))
-    
-    cycleTiming = datetime.now()
-    if (reachTemp(57)):
-        if (datetime.now() < (cycleTiming + timedelta(seconds=8))):
-            cycleTiming = datetime.now()
-            if (reachTemp(94)):
-                if (datetime.now() < (cycleTiming + timedelta(seconds=8))):
-                    if(reachTemp(57)):
-                        return True
-    return 
-
 def measureData():
     global ADC
     for sensor in sensors:
         sensor.readSensorValue(readADC(ADC, sensor.pin))
         sensor.mapValue()
     return
-
-def measureDataLoop():
-    measureData()
-    send2DB()
-    time.sleep(1)
-    print("sent data")
-    return
-    
+ 
 def createMeasurementDict():
     measureData()
     MeasurementDict = {
@@ -156,6 +137,12 @@ def initPWMsignals():
         pwm = GPIO.PWM(i.pin, 100)
         pwm.ChangeDutyCycle(100)
         i.pushPWM(pwm)
+
+def stopPWMs():
+    for i in actuators:
+        i.pwm.stop()
+        print("All PWM signals cleared")
+    return
 
 def initADC():
     ads1015 = ADS1015()
@@ -194,6 +181,7 @@ def initGPIOs():
         GPIO.output(o, False)
     
     GPIO.output(LEDstatus1Pin, True)
+    return
 
 def checkButtons():
     global buttonState
@@ -205,10 +193,49 @@ def checkButtons():
         return
     return
 
+
+#Thread Loops--------------------
+def thermoCycling():
+    global cycleCounter
+    while(not ProcessDone):
+        cycleCounter += 1
+        print("Thermal cycling startet: index " + str(cycleCounter))
+        cycleTiming = datetime.now()
+        if (reachTemp(57)):
+            if (datetime.now() < (cycleTiming + timedelta(seconds=8))):
+                cycleTiming = datetime.now()
+                if (reachTemp(94)):
+                    if (datetime.now() < (cycleTiming + timedelta(seconds=8))):
+                        if(reachTemp(57)):
+                            return True
+    return True
+
+def measureDataLoop():
+    while(True):
+        send2DB()
+        time.sleep(.5)
+        print("sent data")
+    return True
+
 def readGPIOins():
-    #if (GPIO.Input(EndSwitchPin)==False):
-    #    stopProcess()
+    while(True):
+        if (GPIO.Input(EndSwitchPin)==False):
+            stopProcess()
+    return True
+
+def blinkingLED():
+    global SysStatus
+    while(True):
+        if (Running == True):
+            GPIO.output(LEDstatus2Pin, False)
+            GPIO.output(LEDstatus1Pin, True)
+            time.sleep(1)
+            GPIO.output(LEDstatus1Pin, False)
+            time.sleep(1)
+        else:
+            GPIO.output(LEDstatus2Pin, True)
     return
+#---------------------------------
 
 def initThreads():
     # thread for thermocycling
@@ -220,16 +247,10 @@ def initThreads():
     readGPIOs = threading.Thread(target=readGPIOins)
     blinkLEDs = threading.Thread(target=blinkingLED)
     threads = [tC, meas, readGPIOs, blinkLEDs]
-    #for t in threads:
-    #    t.start()
     print("Initiated threads: " + str(len(threads)))
     return
 
-def stopPWMs():
-    for i in actuators:
-        i.pwm.stop()
-        print("All PWM signals cleared")
-    return
+
 
 def startProcess():
     print("Starting Process")
@@ -237,7 +258,6 @@ def startProcess():
     global SysStatus
     toggleGPIO(True)
     SysStatus = True
-    #start all treads
     print(threads)
     
     for t in threads:
@@ -266,15 +286,6 @@ def stopProcess():
     stopPWMs()
     toggleGPIO(False)
     return
-
-def blinkingLED():
-    global SysStatus
-    while(True):
-        if (SysStatus == True):
-            while(True):
-                GPIO.output(LEDstatus1Pin, True)
-                time.sleep(1)
-                GPIO.output(LEDstatus1Pin, False)
 
 
 def PhotodiodeDiffMeasure(DiodeNr):
@@ -344,11 +355,30 @@ def waitNms(N):
         if(tend-tstart >= N*1000000):
             return
 
+
+def LODmeasurement():
+    numberOfSamples = 5
+    index = 0
+    measurementDiode1 = []
+    measurementDiode2 = []
+    while(index < numberOfSamples):
+        if(GPIO.input(buttonPin)):
+            index += 1
+            print("taking measurement")
+            iterations = 10
+            for i in range(iterations):
+                m1 = Photodiode1.getValue()
+                m2 = Photodiode2.getValue()
+                time.sleep(0.1)
+            m1 = m1/iterations
+            m2 = m2/iterations
+            measurementDiode1.append(m1)
+            measurementDiode2.append(m2)
+        print("Wainting for push button")
+    return measurementDiode1, measurementDiode2
         
 # Initiation --------------------------
 
-SysStatus = False
-Running = False
 ADC = initADC()
 initPWMsignals()
 initGPIOs()
@@ -356,21 +386,23 @@ initThreads()
 cycleCounter = 0
 print("Initiation done")
 
-# -----------------
+# -------------------------------------
+
+# Main loop
 
 try:
     print("Try")
     while(cycleCounter <= numberOfCycles):
         #print("Loop started")
         checkButtons()
-        if(SysStatus == (False and not Running)):
+        if((SysStatus == True) and not Running):
             startProcess()
             print("Process Stared loop")
         
-        elif(SysStatus == True and Running):
+        elif((SysStatus == False) and Running):
             stopProcess()
         
-    
+    ProcessDone = True 
     print(str(cycleCounter)+" Cycles done! Stopping system")
 
     stopProcess()
