@@ -29,7 +29,7 @@ class controller(object):
     def heatPID(self,DC):                 
         #print("heating")
         self.Peltier.cDC(0)
-        self.Fan.cDC(100)
+        self.Fan.cDC(0)
         self.Heater.cDC(DC)   
         return
 
