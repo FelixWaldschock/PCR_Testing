@@ -106,8 +106,7 @@ def downTempPID(tT):
 
 def holdTempPID(tT, holdtime):
     pid = PID(17.16, 0.9438,0, output_limits=(0, 100))
-    controller.fan()#############################################
-    startHold = datetime.now()
+    controller.fan()
     endHold = datetime.now()+ timedelta(seconds=holdtime)
 
     while (startHold < endHold ) :
@@ -373,7 +372,7 @@ print("Initiation done")
 
 # -Stepresponse cooling------------
 upTempPID(94)
-holdTempPID(50, 60) # hold temp 60s
+holdTempPID(94, 60) # hold temp 60s
 
 controller.fan()
 
