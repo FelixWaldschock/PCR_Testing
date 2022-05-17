@@ -83,7 +83,6 @@ def upTempPID(tT):
         pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
         print("upTempPID temp:", Temperature1.mapValue())
         controller.heat(pidValue) 
-
     return True
 
 
@@ -97,9 +96,6 @@ def downTempPID(tT):
         pidValue = pid(Temperature1.mapValue()) 
         print("downTempPID temp:", Temperature1.mapValue())
         controller.cool(pidValue) 
-
-  
-
     controller.fanStop()
     return True
 
@@ -114,6 +110,7 @@ def holdTempPID(tT, holdtime):
         pidValue = pid(Temperature1.mapValue()) 
         print("holdTempPID temp:", Temperature1.mapValue())
         controller.heat(pidValue)
+    controller.fanStop()
     return   
 
 def thermoCycling():
@@ -373,8 +370,6 @@ print("Initiation done")
 # -Stepresponse cooling------------
 upTempPID(94)
 holdTempPID(94, 60) # hold temp 60s
-
-controller.fan()
 
 while (True):
     newDataLine = [datetime.now(),Temperature1.mapValue()]
