@@ -1,4 +1,3 @@
-from itertools import cycle
 import push2DB as p2db
 import readSensor as rS
 import sensor
@@ -9,7 +8,6 @@ import RPi.GPIO as GPIO
 from ads1015 import ADS1015
 import threading
 import time
-import sys
 import send2csv
 import numpy as np
 
