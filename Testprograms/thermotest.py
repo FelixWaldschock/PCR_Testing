@@ -63,16 +63,8 @@ TempTol = 0.01
 
 pwms = []
 
-# FUNCTIONS --------------------------
-def reachTemp(tT): #tT targetTemperature
-    global controller
-    while ((abs(Temperature1.getValue()-tT)<TempTol)==False):  
-        if (Temperature1.getValue()>tT):
-            controller.cool(100)
-        elif(Temperature1.getValue()<tT):
-            controller.heat(100)
-    controller.hold()
-    return True
+# FUNCTIONS ----------------------------------------------------------------------------------------------------------
+
 
 def upTempPID(tT):
     global controller
@@ -99,6 +91,37 @@ def downTempPID(tT):
     controller.fanStop()
     return True
 
+
+
+
+
+
+def upHoldTempPID(tT,holdtime):
+    global controller
+    pid = PID(10.3, 0.331,0, output_limits=(0, 100)) 
+    pid.setpoint = tT
+    while ((abs(Temperature1.mapValue()-tT)<TempTol)==False): 
+        Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
+        pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
+        print("upTempPID temp:", Temperature1.mapValue())
+        controller.heatPID(pidValue) 
+
+
+    controller.fan()
+    endHold = datetime.now()+ timedelta(seconds=holdtime)
+
+    while (datetime.now() < endHold ) :
+        Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
+        pidValue = pid(Temperature1.mapValue()) 
+        print("holdTempPID temp:", Temperature1.mapValue())
+        controller.heatPID(pidValue)
+    controller.fanStop()
+    return True
+
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------
 
 def holdTempPID(tT, holdtime):
     pid = PID(17.16, 0.9438,0, output_limits=(0, 100))
