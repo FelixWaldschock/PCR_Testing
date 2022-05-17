@@ -82,7 +82,7 @@ def upTempPID(tT):
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
         pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
         print("upTempPID temp:", Temperature1.mapValue())
-        controller.heat(pidValue) 
+        controller.heatPID(pidValue) 
     return True
 
 
@@ -95,7 +95,7 @@ def downTempPID(tT):
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
         pidValue = pid(Temperature1.mapValue()) 
         print("downTempPID temp:", Temperature1.mapValue())
-        controller.cool(pidValue) 
+        controller.coolPID(pidValue) 
     controller.fanStop()
     return True
 
@@ -109,7 +109,7 @@ def holdTempPID(tT, holdtime):
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
         pidValue = pid(Temperature1.mapValue()) 
         print("holdTempPID temp:", Temperature1.mapValue())
-        controller.heat(pidValue)
+        controller.heatPID(pidValue)
     controller.fanStop()
     return   
 
