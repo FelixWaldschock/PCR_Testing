@@ -45,7 +45,7 @@ initPWMsignals()
 
 try:
     while(True):
-        controller.heat()
+        controller.fan()
         
 
 except KeyboardInterrupt:

@@ -12,7 +12,8 @@ sys.path.append(parent)
 import send2csv
 
 #channels = ['in0/in1','in0/gnd','in1/gnd','in2/gnd','in3/gnd']
-channels = ['in0/in1']
+#channels = ['in0/in1']
+channels = ['in0/gnd','in1/gnd','in2/gnd','in3/gnd']
 
 f = 10
 ts = 1 / f
@@ -47,7 +48,7 @@ print(ts)
 a = []
 for i in range(200):
     start = time.time()
-    r = (readADC(ADC, channels[0]))
+    r = (readADC(ADC, channels[2]))
     end = time.time()
     a.append(r)
     
