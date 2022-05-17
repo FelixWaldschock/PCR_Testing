@@ -16,6 +16,7 @@ import RPi.GPIO as GPIO
 from ads1015 import ADS1015
 import threading
 import time
+import send2csv
 
 #PID
 from simple_pid import PID
@@ -96,14 +97,20 @@ def downTempPID(tT):
         pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
         print("downTempPID temp:", Temperature1.mapValue())
         controller.cool(pidValue) 
+
+  
+
     controller.fanStop()
     return True
 
 
 def holdTempPID(tT, holdtime):
     pid = PID(17.16, 0.9438,0, output_limits=(0, 100))
+    controller.fan()#############################################
     startHold = datetime.now()
-    while (datetime.now() < startHold +timedelta(seconds=holdtime) ) :
+    endHold = datetime.now()+ timedelta(seconds=holdtime)
+
+    while (startHold < endHold ) :
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
         pidValue = pid(Temperature1.getValue()) # returns DutyCycle value 0-100
         print("holdTempPID temp:", Temperature1.mapValue())
@@ -364,9 +371,26 @@ initGPIOs()
 cycleCounter = 0
 print("Initiation done")
 
-# -----------------
+# -Stepresponse cooling------------
+upTempPID(94)
+holdTempPID(50, 60) # hold temp 60s
+
+controller.fan()
+
 while (True):
-    
-    upTempPID(50)
-    holdTempPID(50, 8)
-    downTempPID(30)
+    newDataLine = [datetime.now(),Temperature1.mapValue()]
+    send2csv("downtemp1.csv",  newDataLine)
+    controller.cool(10)                                      #mal 10% dc probieren
+    print("Cooling, temp:", Temperature1.mapValue())
+    time.sleep(1)
+
+
+# -Stepresponse heating------------
+
+
+while (True):
+    newDataLine = [datetime.now(),Temperature1.mapValue()]
+    send2csv("uptemp1.csv",  newDataLine)
+    controller.heat(5)                                      #mal 10% dc probieren
+    print("Heating, temp:", Temperature1.mapValue())
+    time.sleep(1)
