@@ -4,7 +4,7 @@ class controller(object):
         self.Fan = Ob[1]
         self.Heater = Ob[2]
 
-    """
+    
     def cool(self):
         #print("cooling")
         self.Peltier.cDC(100)
@@ -18,15 +18,15 @@ class controller(object):
         self.Fan.cDC(100)
         self.Heater.cDC(5)
         return
-    """
-    def cool(self,DC):
+    
+    def coolPID(self,DC):
         #print("cooling")
         self.Peltier.cDC(DC)        
         self.Fan.cDC(100)
         self.Heater.cDC(0)
         return
 
-    def heat(self,DC):                 
+    def heatPID(self,DC):                 
         #print("heating")
         self.Peltier.cDC(0)
         self.Fan.cDC(100)
