@@ -11,7 +11,7 @@ import time
 
 #PID
 from simple_pid import PID
-pid.sample_time = 0.01 
+pid.sample_time = 0.1 
 
 
 # general parameters
