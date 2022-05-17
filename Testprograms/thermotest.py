@@ -94,7 +94,7 @@ def downTempPID(tT):
     pid.setpoint = tT   
     while ((abs(Temperature1.mapValue()-tT)<TempTol)==False):
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
-        pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
+        pidValue = pid(Temperature1.mapValue()) 
         print("downTempPID temp:", Temperature1.mapValue())
         controller.cool(pidValue) 
 
@@ -109,9 +109,9 @@ def holdTempPID(tT, holdtime):
     controller.fan()
     endHold = datetime.now()+ timedelta(seconds=holdtime)
 
-    while (startHold < endHold ) :
+    while (datetime.now() < endHold ) :
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
-        pidValue = pid(Temperature1.getValue()) # returns DutyCycle value 0-100
+        pidValue = pid(Temperature1.mapValue()) 
         print("holdTempPID temp:", Temperature1.mapValue())
         controller.heat(pidValue)
     return   
