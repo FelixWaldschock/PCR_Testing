@@ -1,3 +1,4 @@
+from pickle import TRUE
 import sys
 import os
 #import from parent dir
@@ -94,8 +95,6 @@ def downTempPID(tT):
 
 
 
-
-
 def upHoldTempPID(tT,holdtime):
     global controller
     pid = PID(10.3, 0.331,0, output_limits=(0, 100)) 
@@ -105,7 +104,6 @@ def upHoldTempPID(tT,holdtime):
         pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
         print("upTempPID temp:", Temperature1.mapValue())
         controller.heatPID(pidValue) 
-
 
     controller.fan()
     endHold = datetime.now()+ timedelta(seconds=holdtime)
@@ -391,23 +389,36 @@ cycleCounter = 0
 print("Initiation done")
 
 # -Stepresponse cooling------------
-upTempPID(94)
-holdTempPID(94, 60) # hold temp 60s
+upHoldTempPID(94,60)
+#holdTempPID(94, 60) # hold temp 60s
+
+tempArray = [] 
+tempArray[0] = Temperature1.mapValue()
 
 while (True):
-    newDataLine = [datetime.now(),Temperature1.mapValue()]
-    send2csv("downtemp1.csv",  newDataLine)
+    if (not GPIO.input(buttonPin)):
+        break
+
+    tempArray.append(Temperature1.mapValue())
     controller.cool(10)                                      #mal 10% dc probieren
     print("Cooling, temp:", Temperature1.mapValue())
     time.sleep(1)
+    
 
+    
+
+tempArray [-1] = Temperature1.mapValue()
+send2csv("downtemp1.csv",  tempArray)
+
+controller.stop()
 
 # -Stepresponse heating------------
 
-
+""""
 while (True):
     newDataLine = [datetime.now(),Temperature1.mapValue()]
     send2csv("uptemp1.csv",  newDataLine)
     controller.heat(5)                                      #mal 10% dc probieren
     print("Heating, temp:", Temperature1.mapValue())
     time.sleep(1)
+"""
