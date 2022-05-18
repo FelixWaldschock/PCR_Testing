@@ -408,17 +408,9 @@ while (True):
     
 
 tempArray [-1] = Temperature1.mapValue()
-send2csv("downtemp1.csv",  tempArray)
+send2csv.send2csv("downtemp1.csv",  tempArray)
 
 controller.stop()
 
 # -Stepresponse heating------------
 
-""""
-while (True):
-    newDataLine = [datetime.now(),Temperature1.mapValue()]
-    send2csv("uptemp1.csv",  newDataLine)
-    controller.heat(5)                                      #mal 10% dc probieren
-    print("Heating, temp:", Temperature1.mapValue())
-    time.sleep(1)
-"""

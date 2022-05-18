@@ -495,7 +495,7 @@ def LODmeasurement():
             print("Wainting for push button")
     print(m)
     print("measurement done!")
-    send2fbutt.send2csv("Messungen.csv",m)
+    send2csv.send2csv("Messungen.csv",m)
     return 
         
 
