@@ -449,7 +449,7 @@ def nMeasuresTimed(n, deltatms, SensorNr):
         tstart = time.perf_counter_ns()
 
     #Get the average
-    value = sensors[SensorNr].getValue()
+    value = sensors[SensorNr].mapValue()
     return value
 
 def waitNms(N):
@@ -463,13 +463,12 @@ def waitNms(N):
 def LODmeasurement():
     state = False
 
-
     numberOfSamples = 5
     index = 0
     m = []
     vlt1 = []
     vlt2 = []
-    toggleGPIO(True)
+    #toggleGPIO(True)
     while(index < numberOfSamples):
         if(GPIO.input(buttonPin) and (not state)):
             state = True
@@ -480,9 +479,13 @@ def LODmeasurement():
             m1 = []
             m2 = []
             for i in range(iterations):
+                """
                 measureData()
                 m1.append(Photodiode1.mapValue())
                 m2.append(Photodiode2.mapValue())
+                """
+                m1.append(PhotodiodeDiffMeasure(1))
+                m2.append(PhotodiodeDiffMeasure(2))
                 time.sleep(timedelta)
             m1 = np.array(m1)
             m2 = np.array(m2)
@@ -492,7 +495,7 @@ def LODmeasurement():
             vlt2 = np.average(m2)
             m.append([vlt1,vlt2,std1,std2])
             state = False
-            print("Wainting for push button")
+            print("Waiting for push button")
     print(m)
     print("measurement done!")
     send2csv.send2csv("Messungen.csv",m)
@@ -512,8 +515,14 @@ print("Initiation done")
 # -------------------------------------
 
 # Main loop
-
-LODtest = False
+GPIO.output(LED1Pin, True)
+GPIO.output(LED2Pin, True)
+while (True):
+    sensors[1].readSensorValue(readADC(ADC, sensors[1].pin))
+    sensors[2].readSensorValue(readADC(ADC, sensors[2].pin))
+    print("D1:", Photodiode1.mapValue())
+"""
+LODtest = True
 
 if(not (LODtest)):
     try:
@@ -543,3 +552,4 @@ if(not (LODtest)):
 
 if(LODtest):
     LODmeasurement()
+"""
