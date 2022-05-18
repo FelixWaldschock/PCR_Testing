@@ -8,7 +8,6 @@ import RPi.GPIO as GPIO
 from ads1015 import ADS1015
 import threading
 import time
-import sys
 import send2csv
 import numpy as np
 
@@ -93,7 +92,9 @@ def upTempPID(tT):
     global controller
     pid = PID(10.3, 0.331,0, output_limits=(0, 100)) 
     pid.setpoint = tT
-    while ((abs(Temperature1.mapValue()-tT)<TempTol)==False): 
+    while ((abs(Temperature1.mapValue()-tT)<TempTol)==False):
+        if(StopThreads):
+            return
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
         pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
         #print("upTempPID temp:", Temperature1.mapValue())
@@ -107,6 +108,8 @@ def downTempPID(tT):
     pid = PID(17.16, 0.9438,0, output_limits=(0, 100)) # kühler PID noch anpassen
     pid.setpoint = tT   
     while ((abs(Temperature1.mapValue()-tT)<TempTol)==False):
+        if(StopThreads):
+            return
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
         pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
         #print("downTempPID temp:", Temperature1.mapValue())
@@ -118,7 +121,9 @@ def holdTempPID(tT, holdtime):
     pid = PID(17.16, 0.9438,0, output_limits=(0, 100))
     startHold = datetime.now()
     controller.fan()
-    while (datetime.now() < startHold +timedelta(seconds=holdtime) ) :
+    while (datetime.now() < startHold +timedelta(seconds=holdtime)):
+        if(StopThreads):
+            return
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
         pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
         #print("holdTempPID temp:", Temperature1.mapValue())
@@ -218,7 +223,27 @@ def checkButtons():
 
 #Thread Loops--------------------
 def thermoCycling():
-    print("Thermocycle Loop started")
+    while(not(StopThreads)):
+        #initiation cycle -> heat to 94 and hold 60seconds
+        upTempPID(94)
+        holdTempPID(94, 60)
+        print("initiation cycle done!")
+        # main cycling
+        for i in range(numberOfCycles):
+            cycleCounter+=1
+            upTempPID(57)
+            holdTempPID(57,8)
+            upTempPID(72)
+            holdTempPID(72,8)
+            upTempPID(94)
+            holdTempPID(94,8)
+            print("cycle " + str(cycleCounter) + " done")
+        # end cycle
+        upTempPID(72)
+        holdTempPID(72,10)
+
+    return
+    """print("Thermocycle Loop started")
     ht = timedelta(seconds=8)
     global cycleCounter
     while(not ProcessDone):
@@ -244,6 +269,7 @@ def thermoCycling():
                     controller.hold()
                     print("stage3")
         return
+        """
 
 
         """
@@ -330,7 +356,6 @@ def startProcess():
     global ThreadsRunning
     global Running
     Running = True
-    SysStatus = True
     toggleGPIO(True)
     
     print(threads)
@@ -356,7 +381,6 @@ def stopProcess():
     print("Stopping Process")
     global threads
     global SysStatus
-    SysStatus = False
     Runnig = False
     print(threads)
     StopThreads = True
@@ -489,21 +513,20 @@ print("Initiation done")
 
 # Main loop
 
-LODtest = True
+LODtest = False
 
 if(not (LODtest)):
     try:
         print("Waiting for button push")
         while(cycleCounter < numberOfCycles):
             checkButtons()
-            if((SysStatus == True) and (not (Running == True))):
+            if(SysStatus == True):
                 startProcess()
                 print("Process Stared loop")
 
-            """if((SysStatus == False) and Running == True):
-                print("500")
+            if(SysStatus == False):
+                print("Exit due to button press")
                 stopProcess() 
-            """
         stopProcess()
         ProcessDone = True 
         print(str(cycleCounter)+" Cycles done! Stopping system")
