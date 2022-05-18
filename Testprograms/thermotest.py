@@ -393,7 +393,7 @@ upHoldTempPID(94,60)
 #holdTempPID(94, 60) # hold temp 60s
 
 tempArray = [] 
-tempArray[0] = Temperature1.mapValue()
+tempArray.append(datetime.now() )
 
 while (True):
     if (not GPIO.input(buttonPin)):
@@ -407,7 +407,7 @@ while (True):
 
     
 
-tempArray [-1] = Temperature1.mapValue()
+tempArray.append(datetime.now() )
 send2csv.send2csv("downtemp1.csv",  tempArray)
 
 controller.stop()
