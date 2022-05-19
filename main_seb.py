@@ -88,115 +88,47 @@ def reachTemp(tT): #tT targetTemperature
     controller.hold()
     return True
 
-def upHoldTempPID(tT,holdtime):
+def upTempPID(tT):
     global controller
-    pid.Kp = 10.2
-    pid.Ki = 0
-    pid.Kd = 0
-    pid.output_limits=(0,100)
-
+    pid = PID(10.3, 0.331,0, output_limits=(0, 100)) 
     pid.setpoint = tT
-    while (Temperature1.mapValue()<tT): 
-        Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
-        if Temperature1.mapValue()<(tT-5):
-            pid.Ki = 0.05
-            Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
-            pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
-            controller.heatPID(pidValue,0) 
-            print("upTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue, "target", tT)
-        elif Temperature1.mapValue()>(tT-5):
-            pid.Ki = 2.34
-            Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
-            pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
-            controller.heatPID(pidValue,0) 
-            print("upTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue, "target", tT)
-
-    endHold = datetime.now()+ timedelta(seconds=holdtime)
-    
-    while (datetime.now() < endHold ) :
-        pid.Kd = 10.3
-        pid.Ki = 2.34
-        Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
-        pidValue = pid(Temperature1.mapValue()) 
-        controller.heatPID(pidValue,100)
-        print("holdHTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
-        
-    
-    return True
-
-
-
-def downHoldTempPID(tT,holdtime):
-    global controller
-    pid = PID(3.26, 0.064,0, output_limits=(-100, 100)) 
-    pid.setpoint = tT
-    while (Temperature1.mapValue()>tT): 
-
-        if Temperature1.mapValue()>(tT+3):
-            pid.Ki = 0.0
-            Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
-            pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
-            controller.coolPID(abs(pidValue)) 
-            print("downTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
-
-
-        elif Temperature1.mapValue()<(tT+3.1):
-            pid.Ki = 0.064
-            Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
-            pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
-            controller.coolPID(abs(pidValue)) 
-            print("downTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
-        
-    
-    endHold = datetime.now()+ timedelta(seconds=holdtime)
-    
-    while (datetime.now() < endHold ) :
-        
-        Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
-        pidValue = pid(Temperature1.mapValue()) 
-
-        #if pidValue >0:
-        pid.output_limits=(0,100)
-        pid.Kp = 17.2
-        pid.Ki = 4.5
-        controller.heatPID(abs(pidValue),100)
-        print("holdHTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
-
-        int("holdHTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
-        
-    return True
-
-
-
-def downHoldTempPID(tT,holdtime):
-    global controller
-    pid = PID(0.43, 10,0, output_limits=(-100, 100)) 
-    pid.setpoint = tT
-    while (Temperature1.mapValue()>tT):
+    while ((abs(Temperature1.mapValue()-tT)<TempTol)==False):
         if(StopThreads):
             return
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
         pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
-        controller.coolPID(abs(pidValue)) 
-        print("downTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
-    
-    endHold = datetime.now()+ timedelta(seconds=holdtime)
-    
-    while (datetime.now() < endHold ) :
+        #print("upTempPID temp:", Temperature1.mapValue())
+        controller.heat(pidValue) 
+
+    return True
+
+def downTempPID(tT):
+    global controller
+    controller.fan()
+    pid = PID(17.16, 0.9438,0, output_limits=(0, 100)) # kühler PID noch anpassen
+    pid.setpoint = tT   
+    while ((abs(Temperature1.mapValue()-tT)<TempTol)==False):
         if(StopThreads):
             return
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
-        pidValue = pid(Temperature1.mapValue()) 
-
-        if Temperature1.mapValue()>tT:
-            controller.coolPID(abs(pidValue))
-            print("holdCTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
-        
-        elif Temperature1.mapValue()<tT:
-            controller.heatPID(abs(pidValue),100)
-            print("holdHTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
-    
+        pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
+        #print("downTempPID temp:", Temperature1.mapValue())
+        controller.cool(pidValue) 
+    controller.fanStop()
     return True
+
+def holdTempPID(tT, holdtime):
+    pid = PID(17.16, 0.9438,0, output_limits=(0, 100))
+    startHold = datetime.now()
+    controller.fan()
+    while (datetime.now() < startHold +timedelta(seconds=holdtime)):
+        if(StopThreads):
+            return
+        Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
+        pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
+        #print("holdTempPID temp:", Temperature1.mapValue())
+        controller.heat(pidValue)
+    return  
 
 def measureData():
     global ADC
@@ -283,8 +215,6 @@ def checkButtons():
     global buttonPin
     global SysStatus
     buttonState = GPIO.input(buttonPin)
-    #if ((SysStatus == True) and (Running == True)):
-    #    StopThreads = True
     if(buttonState):
         SysStatus = not SysStatus
         return
@@ -293,21 +223,24 @@ def checkButtons():
 
 #Thread Loops--------------------
 def thermoCycling():
-    global cycleCounter
     while(not(StopThreads)):
         #initiation cycle -> heat to 94 and hold 60seconds
-        upHoldTempPID(94, 10)
+        upTempPID(94)
+        holdTempPID(94, 60)
         print("initiation cycle done!")
         # main cycling
         for i in range(numberOfCycles):
             cycleCounter+=1
-            downHoldTempPID(57,12)
-            upHoldTempPID(72,12)
-            upHoldTempPID(94,12)
-            downHoldTempPID(57,0)
+            upTempPID(57)
+            holdTempPID(57,8)
+            upTempPID(72)
+            holdTempPID(72,8)
+            upTempPID(94)
+            holdTempPID(94,8)
             print("cycle " + str(cycleCounter) + " done")
         # end cycle
-        upHoldTempPID(72,10)
+        upTempPID(72)
+        holdTempPID(72,10)
 
     return
     """print("Thermocycle Loop started")
@@ -335,7 +268,34 @@ def thermoCycling():
                 if(reachTemp(57)):
                     controller.hold()
                     print("stage3")
-        return"""
+        return
+        
+
+
+        
+        if ((cycleTiming+ht)<datetime.now()):
+            print("stage2")
+            cycleTiming = datetime.now()
+            if (reachTemp(94)):
+                print("stage3")
+                cycleTiming = datetime.now()
+                if ((cycleTiming+ht)<datetime.now()):
+                    print("stage4")
+                    if(reachTemp(57)):
+                        return True
+        
+
+        # PID
+        
+        upTempPID(57)
+        holdTempPID(57,20)
+        upTempPID(94)
+        holdTempPID(94,20)
+        downTempPID(57)
+
+    
+        
+    """
 
 def measureDataLoop():
     while(not StopThreads):
@@ -351,8 +311,7 @@ def readGPIOins():
         if(StopThreads):
             return
         if (GPIO.input(EndSwitchPin)==False):
-            #stopProcess()
-            print("End switch false")
+            stopProcess()
     return True
 
 def blinkingLED():
@@ -399,7 +358,7 @@ def startProcess():
     Running = True
     toggleGPIO(True)
     
-    #print(threads)
+    print(threads)
     if(ThreadsRunning == False):
         ThreadsRunning = True
         startThreads()
@@ -422,7 +381,6 @@ def stopProcess():
     print("Stopping Process")
     global threads
     global SysStatus
-    SysStatus = False
     Runnig = False
     print(threads)
     StopThreads = True
@@ -491,7 +449,7 @@ def nMeasuresTimed(n, deltatms, SensorNr):
         tstart = time.perf_counter_ns()
 
     #Get the average
-    value = sensors[SensorNr].getValue()
+    value = sensors[SensorNr].mapValue()
     return value
 
 def waitNms(N):
@@ -505,13 +463,12 @@ def waitNms(N):
 def LODmeasurement():
     state = False
 
-
     numberOfSamples = 5
     index = 0
     m = []
     vlt1 = []
     vlt2 = []
-    toggleGPIO(True)
+    #toggleGPIO(True)
     while(index < numberOfSamples):
         if(GPIO.input(buttonPin) and (not state)):
             state = True
@@ -522,9 +479,13 @@ def LODmeasurement():
             m1 = []
             m2 = []
             for i in range(iterations):
+                """
                 measureData()
                 m1.append(Photodiode1.mapValue())
                 m2.append(Photodiode2.mapValue())
+                """
+                m1.append(PhotodiodeDiffMeasure(1))
+                m2.append(PhotodiodeDiffMeasure(2))
                 time.sleep(timedelta)
             m1 = np.array(m1)
             m2 = np.array(m2)
@@ -534,7 +495,7 @@ def LODmeasurement():
             vlt2 = np.average(m2)
             m.append([vlt1,vlt2,std1,std2])
             state = False
-            print("Wainting for push button")
+            print("Waiting for push button")
     print(m)
     print("measurement done!")
     send2csv.send2csv("Messungen.csv",m)
@@ -554,6 +515,18 @@ print("Initiation done")
 # -------------------------------------
 
 # Main loop
+"""
+GPIO.output(LED1Pin, True)
+GPIO.output(LED2Pin, True)
+while (True):
+    sensors[1].readSensorValue(readADC(ADC, sensors[1].pin))
+    sensors[2].readSensorValue(readADC(ADC, sensors[2].pin))
+    print("D2:", Photodiode2.mapValue(), "D1:", Photodiode1.mapValue())
+    if (GPIO.input(buttonPin)):
+        break
+GPIO.output(LED1Pin, False)
+GPIO.output(LED2Pin, False)
+"""
 
 LODtest = False
 
@@ -562,16 +535,14 @@ if(not (LODtest)):
         print("Waiting for button push")
         while(cycleCounter < numberOfCycles):
             checkButtons()
-            if((SysStatus == True) and (Running == False)):
+            if(SysStatus == True):
                 startProcess()
                 print("Process Stared loop")
 
-            """if((SysStatus == False) and Running == True):
+            if(SysStatus == False):
                 print("Exit due to button press")
                 stopProcess() 
-                break
-            """
-        #stopProcess()
+        stopProcess()
         ProcessDone = True 
         print(str(cycleCounter)+" Cycles done! Stopping system")
         print("Process done")
