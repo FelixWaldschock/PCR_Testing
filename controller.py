@@ -15,21 +15,21 @@ class controller(object):
     def heat(self):
         #print("heating")
         self.Peltier.cDC(0)
-        self.Fan.cDC(100)
+        self.Fan.cDC(0)
         self.Heater.cDC(5)
         return
     
     def coolPID(self,DC):
-        #print("cooling")
+        print("cooling")
         self.Peltier.cDC(DC)        
         self.Fan.cDC(100)
         self.Heater.cDC(0)
         return
 
-    def heatPID(self,DC):                 
-        #print("heating")
+    def heatPID(self,DC,fDC):                 
+        print("heating")
         self.Peltier.cDC(0)
-        self.Fan.cDC(0)
+        self.Fan.cDC(fDC)
         self.Heater.cDC(DC)   
         return
 
@@ -48,11 +48,12 @@ class controller(object):
         return
 
     def fan(self):
-        #print("fan")
+        print("fan")
         self.Fan.cDC(100)
         return
 
     def fanStop(self):
+        print("fanstop")
         self.Fan.cDC(0)
         return
 

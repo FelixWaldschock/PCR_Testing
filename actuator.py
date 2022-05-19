@@ -16,4 +16,6 @@ class Actuator(object):
         return
 
     def getDutyCycle(self):
+        if(self.dutyCycle == None):
+            return 0
         return self.dutyCycle
