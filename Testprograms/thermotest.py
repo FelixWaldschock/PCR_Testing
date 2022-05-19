@@ -87,8 +87,9 @@ def downTempPID(tT):
     while ((abs(Temperature1.mapValue()-tT)<TempTol)==False):
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
         pidValue = pid(Temperature1.mapValue()) 
-        print("downTempPID temp:", Temperature1.mapValue())
         controller.coolPID(pidValue) 
+        print("downTempPID temp:", Temperature1.mapValue())
+         
     controller.fanStop()
     return True
 
@@ -97,26 +98,59 @@ def downTempPID(tT):
 
 def upHoldTempPID(tT,holdtime):
     global controller
-    pid = PID(10.3, 0.331,0, output_limits=(0, 100)) 
+    pid = PID(6.43, 0.133,0, output_limits=(0, 100)) 
     pid.setpoint = tT
-    while ((abs(Temperature1.mapValue()-tT)<TempTol)==False): 
+    while (Temperature1.mapValue()<tT): 
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
         pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
-        print("upTempPID temp:", Temperature1.mapValue())
-        controller.heatPID(pidValue) 
-
-    controller.fan()
+        controller.heatPID(pidValue,0) 
+        print("upTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
+    
     endHold = datetime.now()+ timedelta(seconds=holdtime)
-
+    
     while (datetime.now() < endHold ) :
+        
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
         pidValue = pid(Temperature1.mapValue()) 
-        print("holdTempPID temp:", Temperature1.mapValue())
-        controller.heatPID(pidValue)
-    controller.fanStop()
+        controller.heatPID(pidValue,100)
+        print("holdHTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
+        
+    
     return True
 
 
+
+def downHoldTempPID(tT,holdtime):
+    global controller
+    pid = PID(0.43, 10,0, output_limits=(-100, 100)) 
+    pid.setpoint = tT
+    while (Temperature1.mapValue()>tT): 
+        Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
+        pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
+        controller.coolPID(abs(pidValue)) 
+        print("downTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
+    
+    endHold = datetime.now()+ timedelta(seconds=holdtime)
+    
+    while (datetime.now() < endHold ) :
+        Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
+        pidValue = pid(Temperature1.mapValue()) 
+
+        if Temperature1.mapValue()>tT:
+            controller.coolPID(abs(pidValue))
+            print("holdCTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
+        
+        elif Temperature1.mapValue()<tT:
+            controller.heatPID(abs(pidValue),100)
+            print("holdHTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
+    
+    return True
+
+
+
+
+    
+        
 
 
 #-----------------------------------------------------------------------------------------------------------------------------------
@@ -389,28 +423,39 @@ cycleCounter = 0
 print("Initiation done")
 
 # -Stepresponse cooling------------
-upHoldTempPID(94,60)
+
+
+upHoldTempPID(65,20)
+downHoldTempPID(35,20)
+upHoldTempPID(65,20)
+downHoldTempPID(35,20)
+controller.stop()
 #holdTempPID(94, 60) # hold temp 60s
 
-tempArray = [] 
-tempArray.append(datetime.now() )
 
+
+"""
+
+controller.heat()
+tempArray = [1.1] 
+tempArray.append(datetime.now() )
+#controller.fan()
 while (True):
-    if (not GPIO.input(buttonPin)):
+    if ( GPIO.input(buttonPin)):
         break
-
+    Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
     tempArray.append(Temperature1.mapValue())
-    controller.cool(10)                                      #mal 10% dc probieren
-    print("Cooling, temp:", Temperature1.mapValue())
+    #controller.cool()                                      #mal 10% dc probieren
+    print("heating, temp:", Temperature1.mapValue())
     time.sleep(1)
-    
+   
 
     
 
-tempArray.append(datetime.now() )
-send2csv.send2csv("downtemp1.csv",  tempArray)
+tempArray.append(datetime.now())
+send2csv.send2csv("uptemp1.csv",  tempArray)
 
 controller.stop()
 
 # -Stepresponse heating------------
-
+"""

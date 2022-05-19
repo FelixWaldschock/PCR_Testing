@@ -269,10 +269,10 @@ def thermoCycling():
                     controller.hold()
                     print("stage3")
         return
-        """
+        
 
 
-        """
+        
         if ((cycleTiming+ht)<datetime.now()):
             print("stage2")
             cycleTiming = datetime.now()
@@ -283,10 +283,10 @@ def thermoCycling():
                     print("stage4")
                     if(reachTemp(57)):
                         return True
-        """
+        
 
         # PID
-        """
+        
         upTempPID(57)
         holdTempPID(57,20)
         upTempPID(94)
@@ -295,7 +295,7 @@ def thermoCycling():
 
     
         
-                    """
+    """
 
 def measureDataLoop():
     while(not StopThreads):
@@ -515,14 +515,20 @@ print("Initiation done")
 # -------------------------------------
 
 # Main loop
+"""
 GPIO.output(LED1Pin, True)
 GPIO.output(LED2Pin, True)
 while (True):
     sensors[1].readSensorValue(readADC(ADC, sensors[1].pin))
     sensors[2].readSensorValue(readADC(ADC, sensors[2].pin))
-    print("D1:", Photodiode1.mapValue())
+    print("D2:", Photodiode2.mapValue(), "D1:", Photodiode1.mapValue())
+    if (GPIO.input(buttonPin)):
+        break
+GPIO.output(LED1Pin, False)
+GPIO.output(LED2Pin, False)
 """
-LODtest = True
+
+LODtest = False
 
 if(not (LODtest)):
     try:
@@ -552,4 +558,3 @@ if(not (LODtest)):
 
 if(LODtest):
     LODmeasurement()
-"""
