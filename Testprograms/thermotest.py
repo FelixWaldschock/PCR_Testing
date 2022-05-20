@@ -23,6 +23,7 @@ import send2csv
 from simple_pid import PID
 pid = PID(17.16, 0.9438,0, output_limits=(0, 100))
 pid.sample_time = 0.1 
+pid.proportional_on_measurement=False
 
 # general parameters
 numberOfCycles = 30
@@ -95,21 +96,35 @@ def downTempPID(tT):
 
 
 
-
+#---------------------------------------------------------------------------------------------------------------------------------
 def upHoldTempPID(tT,holdtime):
     global controller
-    pid = PID(6.43, 0.133,0, output_limits=(0, 100)) 
+    pid.Kp = 10.2
+    pid.Ki = 0
+    pid.Kd = 0
+    pid.output_limits=(0,100)
+
     pid.setpoint = tT
     while (Temperature1.mapValue()<tT): 
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
-        pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
-        controller.heatPID(pidValue,0) 
-        print("upTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
-    
+        if Temperature1.mapValue()<(tT-5):
+            pid.Ki = 0.05
+            Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
+            pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
+            controller.heatPID(pidValue,0) 
+            print("upTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue, "target", tT)
+        elif Temperature1.mapValue()>(tT-5):
+            pid.Ki = 2.34
+            Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
+            pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
+            controller.heatPID(pidValue,0) 
+            print("upTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue, "target", tT)
+
     endHold = datetime.now()+ timedelta(seconds=holdtime)
     
     while (datetime.now() < endHold ) :
-        
+        pid.Kd = 10.3
+        pid.Ki = 2.34
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
         pidValue = pid(Temperature1.mapValue()) 
         controller.heatPID(pidValue,100)
@@ -122,28 +137,42 @@ def upHoldTempPID(tT,holdtime):
 
 def downHoldTempPID(tT,holdtime):
     global controller
-    pid = PID(0.43, 10,0, output_limits=(-100, 100)) 
+    pid = PID(3.26, 0.064,0, output_limits=(-100, 100)) 
     pid.setpoint = tT
     while (Temperature1.mapValue()>tT): 
-        Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
-        pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
-        controller.coolPID(abs(pidValue)) 
-        print("downTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
+
+        if Temperature1.mapValue()>(tT+3):
+            pid.Ki = 0.0
+            Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
+            pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
+            controller.coolPID(abs(pidValue)) 
+            print("downTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
+
+
+        elif Temperature1.mapValue()<(tT+3.1):
+            pid.Ki = 0.064
+            Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))
+            pidValue = pid(Temperature1.mapValue()) # returns DutyCycle value 0-100
+            controller.coolPID(abs(pidValue)) 
+            print("downTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
+        
     
     endHold = datetime.now()+ timedelta(seconds=holdtime)
     
     while (datetime.now() < endHold ) :
+        
         Temperature1.readSensorValue(readADC(ADC, sensors[0].pin))  
         pidValue = pid(Temperature1.mapValue()) 
 
-        if Temperature1.mapValue()>tT:
-            controller.coolPID(abs(pidValue))
-            print("holdCTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
+        #if pidValue >0:
+        pid.output_limits=(0,100)
+        pid.Kp = 17.2
+        pid.Ki = 4.5
+        controller.heatPID(abs(pidValue),100)
+        print("holdHTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
+
+        #print("holdHTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
         
-        elif Temperature1.mapValue()<tT:
-            controller.heatPID(abs(pidValue),100)
-            print("holdHTempPID temp:", Temperature1.mapValue(), "  DC:", pidValue)
-    
     return True
 
 
@@ -156,7 +185,7 @@ def downHoldTempPID(tT,holdtime):
 #-----------------------------------------------------------------------------------------------------------------------------------
 
 def holdTempPID(tT, holdtime):
-    pid = PID(17.16, 0.9438,0, output_limits=(0, 100))
+    pid = PID(17.16, 0.0038,0, output_limits=(0, 100))
     controller.fan()
     endHold = datetime.now()+ timedelta(seconds=holdtime)
     pid.setpoint= tT
@@ -424,12 +453,14 @@ print("Initiation done")
 
 # -Stepresponse cooling------------
 
-
-upHoldTempPID(65,20)
-downHoldTempPID(35,20)
-upHoldTempPID(65,20)
-downHoldTempPID(35,20)
+"""
+upHoldTempPID(96,60)
 controller.stop()
+#downHoldTempPID(0,200000)
+"""
+upHoldTempPID(96,200)
+#ownHoldTempPID(50,10)
+
 #holdTempPID(94, 60) # hold temp 60s
 
 
